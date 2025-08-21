@@ -1,10 +1,11 @@
-FROM python:3.12-slim
+FROM python:3.12.11-slim
+
 
 # Set working directory
 WORKDIR /app
 
 # Install system dependencies required for bambooai
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     build-essential \
     libffi-dev \
     git \
@@ -33,6 +34,3 @@ ENV PYTHONUNBUFFERED=1
 
 # Set the working directory to web_app
 WORKDIR /app/web_app
-
-# Start the Flask application
-CMD ["python", "app.py"]
