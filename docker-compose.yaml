@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   bambooai-webapp:
     build:
@@ -17,6 +15,24 @@ services:
       - ./web_app/storage:/app/web_app/storage
       - ./web_app/temp:/app/web_app/temp
       - ./web_app/logs:/app/web_app/logs
+
+      # Mount BambooAI
+      - ./bambooai:/app/bambooai
     
     # Restart policy
     restart: unless-stopped
+    command: gunicorn --bind 0.0.0.0:5000 app:app
+  mongodb:
+    image: mongo:7.0.23
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:
