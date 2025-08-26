@@ -3,6 +3,7 @@ import os
 import time
 import json
 import sys
+from bambooai.models import litellm_models
 
 
 def load_llm_config():
@@ -104,12 +105,10 @@ def llm_call(log_and_call_manager, messages: str, agent: str = None, chain_id: s
     }
 
     if provider in provider_function_map:
-        # Try to import the correct module
-        provider_module = try_import(f'{provider}_models')
 
         # Call the appropriate function from the imported module
         function_name = provider_function_map[provider]
-        content_received, local_llm_messages, prompt_tokens_used, completion_tokens_used, total_tokens_used, elapsed_time, tokens_per_second = getattr(provider_module, function_name)(messages, model, temperature, max_tokens, response_format)
+        content_received, local_llm_messages, prompt_tokens_used, completion_tokens_used, total_tokens_used, elapsed_time, tokens_per_second = getattr(litellm_models, function_name)(messages, model, temperature, max_tokens, response_format)
         
         # Log the results
         log_and_call_manager.write_to_log(agent, chain_id, timestamp, model, local_llm_messages, content_received, prompt_tokens_used, completion_tokens_used, total_tokens_used, elapsed_time, tokens_per_second)
@@ -139,12 +138,10 @@ def llm_stream(prompt_manager, log_and_call_manager, output_manager, messages: s
     }
 
     if provider in provider_function_map:
-        # Try to import the correct module
-        provider_module = try_import(f'{provider}_models')
 
         # Call the appropriate function from the imported module
         function_name = provider_function_map[provider]
-        result = getattr(provider_module, function_name)(prompt_manager, log_and_call_manager, output_manager, chain_id, messages, model, temperature, max_tokens, tools, response_format, reasoning_models, reasoning_effort)
+        result = getattr(litellm_models, function_name)(prompt_manager, log_and_call_manager, output_manager, chain_id, messages, model, temperature, max_tokens, tools, response_format, reasoning_models, reasoning_effort)
         
         # Unpack the result
         if tools:
