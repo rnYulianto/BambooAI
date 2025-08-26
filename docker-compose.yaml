@@ -21,7 +21,7 @@ services:
     
     # Restart policy
     restart: unless-stopped
-    command: gunicorn --bind 0.0.0.0:5000 app:app
+    command: gunicorn --bind 0.0.0.0:5000 app:app --reload
   mongodb:
     image: mongo:7.0.23
     container_name: mongodb
