@@ -164,7 +164,6 @@ bamboo_ai_instances = {}
 user_preferences = {}
 
 # BambooAI parameters
-EXPLORATORY = True
 SEARCH_TOOL = True
 WEBUI = True
 VECTOR_DB = bool(os.getenv('PINECONE_API_KEY'))
@@ -191,7 +190,6 @@ def get_bamboo_ai(session_id, df=None):
         bamboo_ai_instances[session_id] = BambooAI(
             df=df,
             user_id=USER_ID,
-            exploratory=EXPLORATORY,
             planning=prefs['planning'],
             search_tool=SEARCH_TOOL,
             webui=WEBUI,
@@ -273,7 +271,6 @@ def load_dataframe_to_bamboo_ai_instance(session_id, df=None, file=None, executi
     bamboo_ai_instances[session_id] = BambooAI(
         df=df,
         user_id=USER_ID,
-        exploratory=EXPLORATORY,
         planning=prefs['planning'],
         search_tool=SEARCH_TOOL,
         webui=WEBUI,
@@ -324,7 +321,6 @@ def start_new_conversation(session_id):
     bamboo_ai_instances[session_id] = BambooAI(
         df=None,
         user_id=USER_ID,
-        exploratory=EXPLORATORY,
         planning=prefs['planning'],
         search_tool=SEARCH_TOOL,
         webui=WEBUI,
@@ -450,7 +446,6 @@ def update_planning():
             bamboo_ai_instances[session_id] = BambooAI(
                 df=current_instance.df if hasattr(current_instance, 'df') else None,
                 user_id=USER_ID,
-                exploratory=current_instance.exploratory,
                 planning=planning_enabled,  # Use the new state
                 search_tool=current_instance.search_tool,
                 webui=current_instance.webui,
@@ -527,7 +522,6 @@ def update_ontology():
             bamboo_ai_instances[session_id] = BambooAI(
                 df=current_instance.df if hasattr(current_instance, 'df') else None,
                 user_id=USER_ID,
-                exploratory=current_instance.exploratory,
                 planning=prefs['planning'],
                 search_tool=current_instance.search_tool,
                 webui=current_instance.webui,
@@ -639,7 +633,6 @@ def remove_primary_dataset():
         bamboo_ai_instances[session_id] = BambooAI(
             df=None, # Explicitly set df to None
             user_id=USER_ID,
-            exploratory=EXPLORATORY,
             planning=planning_pref,
             search_tool=SEARCH_TOOL,
             webui=WEBUI,
@@ -721,7 +714,6 @@ def upload_auxiliary_dataset():
                 bamboo_ai_instances[session_id] = BambooAI(
                     df=current_instance.df,
                     user_id=USER_ID,
-                    exploratory=current_instance.exploratory,
                     planning=prefs.get('planning', False),
                     search_tool=current_instance.search_tool,
                     webui=current_instance.webui,
@@ -798,7 +790,6 @@ def remove_auxiliary_dataset():
             bamboo_ai_instances[session_id] = BambooAI(
                 df=current_instance.df,
                 user_id=USER_ID,
-                exploratory=current_instance.exploratory,
                 planning=prefs['planning'],
                 search_tool=current_instance.search_tool,
                 webui=current_instance.webui,
@@ -1626,7 +1617,6 @@ def sweatstack_remove_data():
         bamboo_ai_instances[session_id] = BambooAI(
             df=None, # Explicitly set df to None
             user_id=USER_ID,
-            exploratory=EXPLORATORY,
             planning=planning_pref,
             search_tool=SEARCH_TOOL,
             webui=WEBUI,

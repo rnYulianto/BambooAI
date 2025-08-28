@@ -18,7 +18,6 @@ class BambooAI:
                  max_conversations: int = 4,
                  vector_db: bool = False, 
                  search_tool: bool = False,
-                 exploratory: bool = True,
                  df_ontology: str = None,
                  planning: bool = False,
                  webui: bool = False,
@@ -117,9 +116,6 @@ class BambooAI:
         self.vector_db = vector_db
         self.retrieved_similarity_score = None  # Stores the similarity score of the retrieved data from the vector database
         self.retrieved_rank = None
-
-        # Set the exploratory mode. This mode is True when you want the model to evaluate the original user prompt and break it down in algorithm.
-        self.exploratory = exploratory
 
         # Set the planning mode. This mode is True when you want the model to generate a plan for the solution.
         self.planning = planning
@@ -440,7 +436,7 @@ class BambooAI:
                 self.message_manager.code_messages[0] = {"role": "system", "content": self.prompts.code_generator_system_gen}
             agent = 'Planner'
 
-        elif expert == 'Research Specialist':
+        else:
             self.message_manager.eval_messages.append({"role": "user", "content": self.prompts.theorist_system.format(utils.get_readable_date(),
                                                                                               None if self.df_id is None else df_summary,
                                                                                               aux_datasets_columns, 
@@ -449,14 +445,6 @@ class BambooAI:
                                                                                               })
             agent = 'Theorist'
             self.output_manager.display_results(chain_id=self.chain_id, query={"expert":expert, "original_question": question, "unknown": query_unknown, "condition": query_condition, "requires_dataset": requires_dataset, "confidence": confidence, "intent_breakdown": intent_breakdown})
-        else:
-            self.message_manager.eval_messages.append({"role": "user", "content": self.prompts.theorist_system.format(utils.get_readable_date(), 
-                                                                                              None if self.df_id is None else df_summary,
-                                                                                              aux_datasets_columns,   
-                                                                                              self.message_manager.last_code, self.message_manager.format_qa_pairs(), 
-                                                                                              question)
-                                                                                              })
-            agent = 'Theorist'
         
         if not analyst or (self.planning and  models.get_model_name("Code Generator")[0] not in self.reasoning_models): # If the analyst is not selected or the code generator model is not a reasoning model
             task_eval, tool_response, full_response = self.task_eval(self.message_manager.eval_messages, agent, image)
@@ -542,35 +530,27 @@ class BambooAI:
         generated_datasets_path = os.path.join('datasets', self.user_id or '', 'generated', str(self.thread_id), str(self.chain_id))
 
         if user_code is None:
-            if self.exploratory is True:
-                self.output_manager.display_results(chain_id=self.chain_id, execution_mode=self.execution_mode, df_id=self.df_id, df=self.df,api_client=self.api_client)
-                # Call the taskmaster method with the user's question if the exploratory mode is True
-                analyst, plan, tool_response, query_unknown, query_condition, data_descr, intent_breakdown = self.taskmaster(question, 
-                                                                                                                 '' if self.df_id is None else utils.dataframe_summary_to_string(self.df, self.execution_mode, self.df_id, self.api_client),
-                                                                                                                 utils.get_aux_datasets_columns(file_paths=self.auxiliary_datasets,execution_mode=self.execution_mode,executor_client=self.api_client),
-                                                                                                                 image
-                                                                                                                )
-                if not analyst:
-                    self.output_manager.display_results(chain_id=self.chain_id, research=tool_response, answer=plan)
-                    self.log_and_call_manager.print_summary_to_terminal(self.output_manager)
-                    self.message_manager.tasks.append(question)
-                    self.message_manager.store_interaction(self.thread_id, self.chain_id, google_search_results=tool_response, code_exec_results=self.message_manager.code_exec_results, executed_code=self.message_manager.last_code, qa_pairs=self.message_manager.qa_pairs, tasks=self.message_manager.tasks)
-                    return
-                else:
-                    if self.planning and models.get_model_name("Code Generator")[0] not in self.reasoning_models:
-                        plan_vis = utils.generate_plan_graph(plan)
-                        # Create a dictionary containing both the visualization and the YAML data
-                        plan_web = {
-                            'visualization': plan_vis,
-                            'yaml': plan
-                        }
-                        self.output_manager.display_results(chain_id=self.chain_id, research=tool_response, plan=plan_web)
+            self.output_manager.display_results(chain_id=self.chain_id, execution_mode=self.execution_mode, df_id=self.df_id, df=self.df,api_client=self.api_client)
+            analyst, plan, tool_response, query_unknown, query_condition, data_descr, intent_breakdown = self.taskmaster(question, 
+                                                                                                                '' if self.df_id is None else utils.dataframe_summary_to_string(self.df, self.execution_mode, self.df_id, self.api_client),
+                                                                                                                utils.get_aux_datasets_columns(file_paths=self.auxiliary_datasets,execution_mode=self.execution_mode,executor_client=self.api_client),
+                                                                                                                image
+                                                                                                            )
+            if not analyst:
+                self.output_manager.display_results(chain_id=self.chain_id, research=tool_response, answer=plan)
+                self.log_and_call_manager.print_summary_to_terminal(self.output_manager)
+                self.message_manager.tasks.append(question)
+                self.message_manager.store_interaction(self.thread_id, self.chain_id, google_search_results=tool_response, code_exec_results=self.message_manager.code_exec_results, executed_code=self.message_manager.last_code, qa_pairs=self.message_manager.qa_pairs, tasks=self.message_manager.tasks)
+                return
             else:
-                self.output_manager.display_results(chain_id=self.chain_id, execution_mode=self.execution_mode, df_id=self.df_id, df=self.df, api_client=self.api_client)
-                analyst = 'Data Analyst DF'
-                plan = None
-                tool_response = []
-                intent_breakdown = question
+                if self.planning and models.get_model_name("Code Generator")[0] not in self.reasoning_models:
+                    plan_vis = utils.generate_plan_graph(plan)
+                    # Create a dictionary containing both the visualization and the YAML data
+                    plan_web = {
+                        'visualization': plan_vis,
+                        'yaml': plan
+                    }
+                    self.output_manager.display_results(chain_id=self.chain_id, research=tool_response, plan=plan_web)
 
             if analyst == 'Data Analyst DF':
                 example_code = self.prompts.default_example_output_df
