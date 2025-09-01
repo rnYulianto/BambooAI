@@ -8,7 +8,6 @@ function initializeFileManagement() {
     initializePrimaryDatasetUpload();
     initializeAuxiliaryDatasetUpload();
     initializeOntologyUpload();
-    initializeSweatStackDataOption();
     fetchInitialOntologyState();
     
     console.log('File management initialized');
@@ -32,12 +31,6 @@ function initializePrimaryDatasetUpload() {
         if (currentDatasetName) {
             showUploadLimitMessage('Only 1 primary dataset allowed. Remove current to upload new.');
             return; 
-        }
-        
-        // Check if SweatStack data is loaded
-        if (currentSweatStackState.isLoaded) {
-            showUploadLimitMessage('SweatStack data already loaded. Remove current to upload primary dataset.');
-            return;
         }
         
         primaryFileInput.click();
@@ -356,9 +349,6 @@ async function handleDatasetPillClick(event) {
         console.log('Ontology pill clicked - no preview action.');
         textSpan.textContent = originalPillText;
         return;
-    } else if (datasetType === 'sweatstack') {
-        fetchUrl = '/get_primary_dataset_preview';
-        fetchBody = {};
     } else {
         console.warn('Unknown dataset type or missing identifier.');
         textSpan.textContent = originalPillText;
@@ -431,7 +421,6 @@ async function handleRemoveDatasetPill(event) {
     let fetchPayload = null;
     let isPrimaryRemoval = false;
     let isOntologyRemoval = false;
-    let isSweatStackRemoval = false;
 
     if (datasetType === 'primary') {
         fetchUrl = '/remove_primary_dataset';
@@ -446,10 +435,6 @@ async function handleRemoveDatasetPill(event) {
         formData.append('ontology_path', '');
         fetchPayload = formData;
         isOntologyRemoval = true;
-    } else if (datasetType === 'sweatstack') {
-        fetchUrl = '/sweatstack/remove_data';
-        fetchPayload = JSON.stringify({});
-        isSweatStackRemoval = true;
     } else {
         console.error('Cannot remove: Unknown dataset type or missing identifier.');
         if (pillContentSpan) pillContentSpan.textContent = originalText;
@@ -489,17 +474,6 @@ async function handleRemoveDatasetPill(event) {
             currentOntologyState.fileName = null;
             currentOntologyState.pillId = null;
             console.log(data.message);
-        } else if (isSweatStackRemoval) {
-            // Reset SweatStack state and clear dataset
-            removeSweatStackPill();
-            currentDatasetName = null;
-            if (typeof createOrUpdateTab === 'function') {
-                createOrUpdateTab('dataframe', '<div style="padding:10px; text-align:center; color:var(--text-secondary);">SweatStack data removed.</div>');
-                if (typeof activateTab === 'function') {
-                    activateTab('dataframe');
-                }
-            }
-            console.log(data.message);
         } else {
             auxiliaryDatasetCount = data.remaining_aux_count !== undefined ? data.remaining_aux_count : Math.max(0, auxiliaryDatasetCount - 1);
         }
@@ -532,71 +506,4 @@ function showUploadLimitMessage(message) {
         messageDiv.classList.remove('visible');
         limitMessageTimeout = null;
     }, 3000);
-}
-
-//--------------------
-//  SWEATSTACK DATA LOADING
-//--------------------
-
-function initializeSweatStackDataOption() {
-    const sweatstackDataButton = document.querySelector('.sweatstack-data-option');
-
-    if (!sweatstackDataButton) {
-        console.log('SweatStack data option not found (user may not be authenticated)');
-        return;
-    }
-
-    sweatstackDataButton.addEventListener('click', function() {
-        console.log('SweatStack data option clicked');
-        
-        // Check if SweatStack data is already loaded
-        if (currentSweatStackState.isLoaded) {
-            showUploadLimitMessage('SweatStack data already loaded. Remove current to load new.');
-            return;
-        }
-        
-        // Check if primary dataset exists
-        if (currentDatasetName) {
-            showUploadLimitMessage('Primary dataset already loaded. Remove current to load SweatStack data.');
-            return;
-        }
-        
-        showSweatStackModal();
-    });
-}
-
-function createSweatStackPill(dataInfo) {
-    const pillId = 'sweatstack-pill-' + Date.now();
-
-    const userCount = dataInfo.users ? dataInfo.users.length : 1;
-    const userText = userCount === 1 ? '1 user' : `${userCount} users`;
-    const metricCount = dataInfo.metrics ? dataInfo.metrics.length : 0;
-    const metricText = metricCount === 1 ? '1 metric' : `${metricCount} metrics`;
-
-    const displayText = `SweatStack (${dataInfo.sports.join(', ')}, ${userText}, ${metricText}, ${dataInfo.days} days) loaded`;
-
-    createOrUpdateDatasetPill(pillId, displayText, 'sweatstack', 'success', false, 'sweatstack_data');
-
-    // Update global state
-    currentSweatStackState.isLoaded = true;
-    currentSweatStackState.pillId = pillId;
-    currentSweatStackState.dataInfo = dataInfo;
-
-    console.log('SweatStack data pill created successfully');
-}
-
-function removeSweatStackPill() {
-    if (currentSweatStackState.pillId) {
-        const pill = document.getElementById(currentSweatStackState.pillId);
-        if (pill) {
-            pill.remove();
-        }
-
-        // Reset global state
-        currentSweatStackState.isLoaded = false;
-        currentSweatStackState.pillId = null;
-        currentSweatStackState.dataInfo = null;
-
-        console.log('SweatStack data pill removed');
-    }
 }

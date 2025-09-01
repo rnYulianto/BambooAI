@@ -9,7 +9,6 @@ import threading
 import uuid
 import glob
 import pandas as pd
-import sweatstack as ss
 from datetime import datetime, timedelta
 from queue import Queue, Empty
 from flask import Flask, request, jsonify, Response, render_template, session, send_from_directory, redirect, url_for
@@ -168,10 +167,6 @@ SEARCH_TOOL = True
 WEBUI = True
 VECTOR_DB = bool(os.getenv('PINECONE_API_KEY'))
 DF_ONTOLOGY = None
-
-# SweatStack OAuth configuration
-SWEATSTACK_CLIENT_ID = os.getenv('SWEATSTACK_CLIENT_ID')
-SWEATSTACK_CLIENT_SECRET = os.getenv('SWEATSTACK_CLIENT_SECRET')
 
 
 # Function to generate a unique DataFrame ID
@@ -335,68 +330,6 @@ def start_new_conversation(session_id):
     
     return jsonify({"message": "New conversation started"}), 200
 
-
-def transform_sweatstack_longitudinal_data(df):
-    # 1. Convert timestamp column to local time and rename to "datetime"
-    df["datetime"] = pd.to_datetime(df.index).tz_localize(None)  # Remove timezone info to convert to local time
-    df = df.reset_index(drop=True)  # Remove the original timestamp index
-
-    # 2. Convert activity_id column to integers (incrementing from oldest to newest activity per athlete)
-    df = df.sort_values('datetime')
-
-    # Check if we have athlete_id column (multi-user scenario)
-    if 'athlete_id' in df.columns:
-        # Create unique activity IDs per athlete
-        unique_activities = df.groupby(['athlete_id', 'activity_id'])['datetime'].min().sort_values()
-        activity_mapping = {}
-
-        for athlete_id in df['athlete_id'].unique():
-            athlete_activities = unique_activities[athlete_id]
-            for new_id, (old_id, _) in enumerate(athlete_activities.items(), 1):
-                activity_mapping[(athlete_id, old_id)] = new_id
-
-        # Apply mapping using both athlete_id and activity_id
-        df['activity_id'] = df.apply(lambda row: activity_mapping.get((row['athlete_id'], row['activity_id']), row['activity_id']), axis=1)
-
-        # Convert athlete_id to integers (incrementing from first appearance)
-        unique_athletes = sorted(df['athlete_id'].unique())
-        athlete_mapping = {old_id: new_id for new_id, old_id in enumerate(unique_athletes, 1)}
-        df['athlete_id'] = df['athlete_id'].map(athlete_mapping)
-    else:
-        # Single user scenario
-        unique_activities = df.groupby('activity_id')['datetime'].min().sort_values()
-        activity_mapping = {old_id: new_id for new_id, old_id in enumerate(unique_activities.index, 1)}
-        df['activity_id'] = df['activity_id'].map(activity_mapping)
-
-    # 3. Add cumulative distance column calculated from duration × speed
-    if 'duration' in df.columns and 'speed' in df.columns:
-        df['distance_increment'] = df['duration'].dt.total_seconds() * df['speed']
-
-        # Calculate cumulative distance per activity (and per athlete if multi-user)
-        if 'athlete_id' in df.columns:
-            df['distance'] = df.groupby(['athlete_id', 'activity_id'])['distance_increment'].cumsum()
-        else:
-            df['distance'] = df.groupby('activity_id')['distance_increment'].cumsum()
-
-        df = df.drop('distance_increment', axis=1)
-
-    # 4. Remove duration column
-    df = df.drop('duration', axis=1)
-
-    # 5. Convert semicircles to degrees for GPS coordinates
-    for col in ['longitude', 'latitude']:
-        if col in df.columns:
-            df[col] = df[col].where(df[col].isna(), df[col] * (180 / 2**31))
-
-    # 6. Sort columns by athlete_id, datetime, activity_id, sport, then other columns
-    priority_columns = ['athlete_id', 'datetime', 'activity_id', 'sport']
-    existing_priority_columns = [col for col in priority_columns if col in df.columns]
-    other_columns = [col for col in df.columns if col not in priority_columns]
-    df = df[existing_priority_columns + sorted(other_columns)]
-    
-    return df
-
-
 @app.before_request
 def ensure_session():
     if 'session_id' not in session:
@@ -414,13 +347,7 @@ def ensure_session():
 
 @app.route('/')
 def index():
-    common_context = {
-        'sweatstack_enabled': bool(SWEATSTACK_CLIENT_ID and SWEATSTACK_CLIENT_SECRET),
-        'sweatstack_authenticated': bool(session.get('sweatstack_access_token')),
-        'sweatstack_metrics': [m for m in ss.Metric if m not in [ss.Metric.duration, ss.Metric.lactate, ss.Metric.rpe, ss.Metric.notes]],
-        'sweatstack_default_metrics': [ss.Metric.power, ss.Metric.speed, ss.Metric.heart_rate]
-    }
-    return render_template('index.html', **common_context)
+    return render_template('index.html')
 
 # New endpoint to update planning preference
 @app.route('/update_planning', methods=['POST'])
@@ -1454,191 +1381,6 @@ def search_threads():
     except Exception as e:
         app.logger.error(f"Error searching threads: {e}")
         return jsonify({'error': 'An error occurred during search'}), 500
-    
-# ----------------------
-# SweatStack Integration
-# ----------------------
-
-@app.route('/sweatstack/authorize', methods=['GET'])
-def sweatstack_authorize():
-    return redirect(f'https://app.sweatstack.no/oauth/authorize?client_id={SWEATSTACK_CLIENT_ID}&scope=data:read,profile&redirect_uri={request.url_root}sweatstack/oauth-callback&prompt=none')
-
-
-@app.route('/sweatstack/oauth-callback', methods=['GET'])
-def sweatstack_callback():
-    code = request.args.get('code')
-    if not code:
-        return jsonify({'error': 'No code provided'}), 400
-
-    try:
-        response = requests.post(
-            'https://app.sweatstack.no/api/v1/oauth/token',
-            data={
-                'grant_type': 'authorization_code',
-                'code': code,
-                'client_id': SWEATSTACK_CLIENT_ID,
-                'client_secret': SWEATSTACK_CLIENT_SECRET,
-            },
-        )
-        response.raise_for_status()
-
-        token_data = response.json()
-        access_token = token_data.get('access_token')
-
-        session['sweatstack_access_token'] = access_token
-
-        return redirect(url_for('index'))
-
-    except requests.exceptions.RequestException as e:
-        app.logger.error(f'Error exchanging SweatStack code for token: {str(e)}')
-        return jsonify({'error': 'Failed to exchange SweatStack code for token'}), 500
-
-
-@app.route('/sweatstack/get_users', methods=['GET'])
-def sweatstack_get_users():
-    """Get available SweatStack users"""
-    access_token = session.get('sweatstack_access_token')
-    if not access_token:
-        return jsonify({'error': 'Not authenticated with SweatStack'}), 401
-
-    try:
-        sweatstack_client = ss.Client(api_key=access_token)
-
-        accessible_users = sweatstack_client.get_users()
-        current_user = sweatstack_client.get_userinfo()
-
-        formatted_users = []
-        for user in accessible_users:
-            formatted_users.append({
-                'id': user.id,
-                'name': user.display_name,
-                'is_current': user.id == current_user.sub
-            })
-
-        return jsonify({'users': formatted_users}), 200
-
-    except Exception as e:
-        app.logger.error(f'Error fetching SweatStack users: {str(e)}')
-        return jsonify({'error': f'Failed to fetch users: {str(e)}'}), 500
-
-
-@app.route('/sweatstack/load_data', methods=['POST'])
-def sweatstack_load_data():
-    """Load SweatStack data using stored access token"""
-    access_token = session.get('sweatstack_access_token')
-    if not access_token:
-        return jsonify({'error': 'Not authenticated with SweatStack'}), 401
-
-    try:
-        data = request.json
-        selected_sports = data['sports']
-        selected_metrics = data['metrics']
-        selected_users = data['users']
-
-        start_date = datetime.strptime(data['start_date'], '%Y-%m-%d')
-        end_date = datetime.strptime(data['end_date'], '%Y-%m-%d')
-
-        sweatstack_client = ss.Client(api_key=access_token)
-
-        all_dfs = []
-
-        for user_id in selected_users:
-            try:
-                delegated_client = sweatstack_client.delegated_client(user_id)
-
-                df = delegated_client.get_longitudinal_data(
-                    start=start_date,
-                    end=end_date,
-                    sports=selected_sports,
-                    metrics=selected_metrics,
-                )
-
-                df['athlete_id'] = user_id
-                user_info = delegated_client.get_user(user_id)
-                df['athlete_name'] = user_info.display_name
-
-                all_dfs.append(df)
-
-            except Exception as e:
-                app.logger.warning(f'Error loading data for user {user_id}: {str(e)}')
-                # Continue with other users
-
-        if not all_dfs:
-            return jsonify({'error': 'No data could be loaded for any selected users'}), 400
-
-        combined_df = pd.concat(all_dfs, ignore_index=False)
-        combined_df = transform_sweatstack_longitudinal_data(combined_df)
-
-        session_id = session['session_id']
-        df_json, new_df_id = load_dataframe_to_bamboo_ai_instance(
-            session_id=session_id,
-            df=combined_df,
-            execution_mode=GLOBAL_EXECUTION_MODE
-        )
-
-        return jsonify({
-            'message': 'SweatStack data loaded successfully',
-            'dataframe': df_json,
-            'df_id': new_df_id
-        }), 200
-
-    except Exception as e:
-        app.logger.error(f'Error loading SweatStack data: {str(e)}')
-        return jsonify({'error': f'Failed to load SweatStack data: {str(e)}'}), 500
-
-
-@app.route('/sweatstack/logout', methods=['POST'])
-def sweatstack_logout():
-    """Logout from SweatStack by removing access token"""
-    session.pop('sweatstack_access_token', None)
-    return jsonify({'message': 'Logged out from SweatStack successfully'}), 200
-
-
-@app.route('/sweatstack/remove_data', methods=['POST'])
-def sweatstack_remove_data():
-    """Remove SweatStack data (which is loaded as primary dataset)"""
-    session_id = session.get('session_id')
-    if not session_id:
-        return jsonify({'error': 'No session ID found'}), 400
-
-    try:
-        bamboo_ai_instance = bamboo_ai_instances.get(session_id)
-        prefs = user_preferences.get(session_id)
-
-        if not bamboo_ai_instance or bamboo_ai_instance.df_id is None:
-            return jsonify({'message': 'No SweatStack data is currently loaded.'}), 400
-
-        # Re-instantiate BambooAI for the session without the primary df
-        # Keep auxiliary datasets if they exist
-        aux_datasets = prefs.get('auxiliary_datasets', []) if prefs else []
-        planning_pref = prefs.get('planning', False) if prefs else False
-        ontology_path_pref = prefs.get('ontology_path', DF_ONTOLOGY) if prefs else DF_ONTOLOGY
-
-        bamboo_ai_instances[session_id] = BambooAI(
-            df=None, # Explicitly set df to None
-            user_id=USER_ID,
-            planning=planning_pref,
-            search_tool=SEARCH_TOOL,
-            webui=WEBUI,
-            vector_db=VECTOR_DB,
-            df_ontology=ontology_path_pref,
-            df_id=None, # Clear df_id
-            auxiliary_datasets=aux_datasets
-        )
-
-        # Also clear df_id from user_preferences if it's stored there
-        if prefs and 'df_id' in prefs:
-             del prefs['df_id']
-
-        user_preferences[session_id] = prefs # Save updated prefs
-
-        app.logger.info(f"SweatStack data removed and BambooAI instance reset for session {session_id}.")
-        return jsonify({'message': 'SweatStack data removed successfully.'}), 200
-
-    except Exception as e:
-        app.logger.error(f"Error removing SweatStack data for session {session_id}: {str(e)}")
-        return jsonify({'error': f'Error removing SweatStack data: {str(e)}'}), 500
-
 
 if __name__ == '__main__':
     # Simple command line argument for debug mode

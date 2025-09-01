@@ -139,12 +139,6 @@
                                         </svg>
                                         <span>Ontology</span>
                                     </button>
-                                    {% if sweatstack_authenticated %}
-                                    <button class="attach-option sweatstack-data-option" title="Load SweatStack Data">
-                                        <img src="/static/image/sweatstack-favicon.svg" width="20" height="20" alt="SweatStack">
-                                        <span>SweatStack</span>
-                                    </button>
-                                    {% endif %}
                                     <div id="uploadLimitMessage" class="upload-limit-message"></div>
                                 </div>
                             </div>
@@ -326,23 +320,6 @@
                     </svg>
                     <span class="theme-label">Light Theme</span>
                 </button>
-            
-                <div class="integrations-menu-item">
-                    <button class="settings-option integrations-option">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="8" cy="8" r="6"></circle>
-                            <circle cx="16" cy="16" r="6"></circle>
-                        </svg>
-                        <span>Integrations</span>
-                        <span class="submenu-arrow">›</span>
-                    </button>
-                    <div class="integrations-submenu">
-                        <button class="settings-option sweatstack-option" data-enabled="{{ sweatstack_enabled|lower }}">
-                            <img src="/static/image/sweatstack-favicon.svg" width="20" height="20" alt="SweatStack">
-                            <span>SweatStack</span>
-                        </button>
-                    </div>
-                </div>
                 
                 <a href="https://github.com/pgalko/BambooAI" target="_blank" rel="noopener noreferrer" class="settings-option">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" stroke="none">
@@ -438,133 +415,6 @@
     <div id="summaryPopup" class="summary-popup">
         <button class="close-button">&times;</button>
         <div id="summaryContent"></div>
-    </div>
-
-    <!-- SweatStack Sports Selection Modal -->
-    <div id="sweatstackModal" class="modal">
-        <div class="modal-content">
-            <button class="close" aria-label="Close">×</button>
-            <div class="modal-header-section">
-                <img src="/static/image/sweatstack-favicon.svg" alt="SweatStack Logo">
-                <h3>Load Data from SweatStack</h3>
-            </div>
-
-            <div class="modal-sections-container">
-                <div class="modal-section">
-                    <h4>Select Sports:</h4>
-                    <div class="sports-selection">
-                        <label class="sport-option">
-                            <input type="checkbox" id="cycling-checkbox" value="cycling" checked>
-                            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            <span>Cycling</span>
-                        </label>
-                        <label class="sport-option">
-                            <input type="checkbox" id="running-checkbox" value="running">
-                            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            <span>Running</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="modal-section">
-                    <h4>Select Metrics:</h4>
-                    <div class="metrics-selection">
-                        {% for metric in sweatstack_metrics %}
-                        <label class="metric-option">
-                            <input type="checkbox" id="{{ metric.value }}-checkbox" value="{{ metric.value }}" {% if metric in sweatstack_default_metrics %}checked{% endif %}>
-                            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            <span>{{ metric.value.replace('_', ' ') }}</span>
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="modal-section">
-                    <h4>Select Users:</h4>
-                    <div class="users-selection" id="users-selection">
-                        <div class="loading-spinner">Loading users...</div>
-                    </div>
-                </div>
-
-                <div class="modal-section">
-                    <h4>Date Range:</h4>
-                    <div class="date-range-selection">
-                        <div class="date-input-group">
-                            <label for="startDate">Start Date:</label>
-                            <input type="date" id="startDate" name="startDate" class="date-input">
-                        </div>
-                        <div class="date-input-group">
-                            <label for="endDate">End Date:</label>
-                            <input type="date" id="endDate" name="endDate" class="date-input">
-                        </div>
-                    </div>
-                </div>
-                <p id="modal-message" class="warning-note">
-                    Note: More metrics and longer time windows may slow down the application due to longer loading and processing times.
-                </p>
-            </div>
-
-            <div class="modal-footer">
-                <button id="connectSweatstack" class="circular-button" title="Load Data from SwetStack" aria-label="Load Data from SweatStack">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m22 2-7 20-4-9-9-4Z" />
-                        <path d="M22 2 11 13" />
-                    </svg>
-                </button>
-                <div class="button-label">Load Data</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SweatStack Configuration Required Modal -->
-    <div id="sweatstackConfigModal" class="modal">
-        <div class="modal-content">
-            <button class="close" aria-label="Close">×</button>
-            <div class="modal-header-section">
-                <img src="/static/image/sweatstack-favicon.svg" alt="SweatStack Logo">
-                <h3>SweatStack Configuration Required</h3>
-            </div>
-
-            <div class="modal-section">
-                <p>
-                    Set SWEATSTACK_CLIENT_ID and SWEATSTACK_CLIENT_SECRET environment variables. 
-                    Get API credentials at <a href="https://app.sweatstack.no/settings/api" target="_blank" rel="noopener noreferrer">https://app.sweatstack.no/settings/api</a>
-                </p>
-            </div>
-
-            <button onclick="document.getElementById('sweatstackConfigModal').style.display='none'" class="circular-button" title="Close" aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            </button>
-            <div class="button-label">OK</div>
-        </div>
-    </div>
-
-    <!-- SweatStack Authenticated Modal -->
-    <div id="sweatstackAuthenticatedModal" class="modal">
-        <div class="modal-content">
-            <button class="close" aria-label="Close">×</button>
-            <div class="modal-header-section">
-                <img src="/static/image/sweatstack-favicon.svg" alt="SweatStack Logo">
-                <h3>SweatStack Connected</h3>
-            </div>
-
-            <div class="modal-section">
-                <p>
-                    You are already authenticated with SweatStack. You can load data using the attach menu or disconnect from your account.
-                </p>
-            </div>
-
-            <button id="logoutSweatstack" class="circular-button" title="Disconnect from SweatStack" aria-label="Logout from SweatStack">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-            </button>
-            <div class="button-label">Disconnect</div>
-        </div>
     </div>
 
     <!-- Load modules in dependency order -->

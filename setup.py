@@ -47,7 +47,6 @@ setup(
         'scikit-learn',
         'geopandas',
         'yfinance',
-        'sweatstack'
     ],
     python_requires=">=3.10",
     classifiers=[
