@@ -16,6 +16,11 @@ import tempfile
 from dotenv import load_dotenv
 from google.cloud import storage
 from werkzeug.datastructures import FileStorage
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from models import db, User
+from functools import wraps
 
 # Temporary hardcoded user identifier
 USER_ID = "demo_user"
@@ -154,7 +159,97 @@ GLOBAL_EXECUTION_MODE = os.getenv('EXECUTION_MODE', 'local')  # Default to 'loca
 executor_client = executor_client.ExecutorAPIClient(base_url=EXECUTOR_API_BASE_URL)
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://user:password@bambooai-db:5432/dbname')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
+with app.app_context():
+    db.create_all()
+login_manager = LoginManager(app)
+login_manager.login_view = 'login_page'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Role-based authorization decorator
+def roles_required(*roles):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if current_user.role not in roles:
+                return jsonify({'error': 'Forbidden'}), 403
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+
+# Authentication routes
+@app.route('/register', methods=['GET'])
+def register_page():
+    return render_template('register.html')
+
+@app.route('/register', methods=['POST'])
+def register():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    nip = request.form.get('nip')
+    unit_kerja = request.form.get('unit_kerja')
+    jabatan = request.form.get('jabatan')
+    role = request.form.get('role', 'user')
+    if User.query.filter_by(email=email).first():
+        return jsonify({'error': 'Email already registered'}), 400
+    user = User(
+        email=email,
+        password_hash=generate_password_hash(password),
+        nip=nip,
+        unit_kerja=unit_kerja,
+        jabatan=jabatan,
+        role=role
+    )
+    db.session.add(user)
+    db.session.commit()
+    return redirect(url_for('login_page'))
+
+@app.route('/login', methods=['GET'])
+def login_page():
+    return render_template('login.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = json.loads(request.data)
+    except Exception:
+        data = request.form
+    email = data.get('email')
+    password = data.get('password')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    if not check_password_hash(user.password_hash, password):
+        return jsonify({'success': False, 'error': 'Incorrect password'}), 401
+    login_user(user)
+    return jsonify({'success': True, 'message': 'Logged in'}), 200
+
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+def logout():
+    logout_user()
+    if request.method == 'POST':
+        return jsonify({'message': 'Logged out'}), 200
+    return redirect(url_for('login_page'))
 app.secret_key = os.getenv('FLASK_SECRET')
+
+# API endpoint to get current authenticated user details
+@app.route('/api/me', methods=['GET'])
+@login_required
+def get_current_user():
+    return jsonify({
+        'id': current_user.id,
+        'email': current_user.email,
+        'nip': getattr(current_user, 'nip', None),
+        'unit_kerja': getattr(current_user, 'unit_kerja', None),
+        'jabatan': getattr(current_user, 'jabatan', None),
+        'role': current_user.role
+    }), 200
 
 # Dictionary to store BambooAI instances for each session
 bamboo_ai_instances = {}
@@ -346,6 +441,7 @@ def ensure_session():
         }
 
 @app.route('/')
+@login_required
 def index():
     return render_template('index.html')
 
@@ -538,6 +634,8 @@ def upload_file():
         return jsonify({'message': 'Invalid file type'}), 400
     
 # Remove primary dataset endpoint
+@login_required
+@roles_required('admin')
 @app.route('/remove_primary_dataset', methods=['POST'])
 def remove_primary_dataset():
     session_id = session.get('session_id')
@@ -667,6 +765,8 @@ def upload_auxiliary_dataset():
         return jsonify({'message': 'Invalid file type for auxiliary dataset. Must be .csv or .parquet.'}), 400
     
 # Remove auxiliary dataset endpoint
+@login_required
+@roles_required('admin')
 @app.route('/remove_auxiliary_dataset', methods=['POST'])
 def remove_auxiliary_dataset():
     session_id = session.get('session_id')
@@ -1401,5 +1501,8 @@ if __name__ == '__main__':
     # Clear datasets folder
     clear_datasets_folder()
     
+    # Create database tables if they don't exist
+    with app.app_context():
+        db.create_all()
     # Start the Flask app
     app.run(host='0.0.0.0', port=5000, debug=False)
