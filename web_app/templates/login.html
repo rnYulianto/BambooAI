@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dummy page for login BambooAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+  <div class="login-container">
+    <h1>Login to BambooAI</h1>
+<form id="login-form" action="{{ url_for('login') }}" method="post">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required />
+      </div>
+      <button type="submit" class="btn">Login</button>
+</form>
+    <div id="error" class="error" style="color:red; margin-top:1em;"></div>
+    <script>
+      document.getElementById("login-form").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        try {
+          const response = await fetch("{{ url_for('login') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email, password: password })
+          });
+          const result = await response.json();
+          if (result.success) {
+            window.location.href = "{{ url_for('index') }}";
+          } else {
+            document.getElementById("error").innerText = result.error;
+          }
+        } catch (err) {
+          document.getElementById("error").innerText = "Network error";
+        }
+      });
+    </script>
+    <p>
+      Don't have an account?
+      <a href="/register">Register here</a>
+    </p>
+  </div>
+</body>
+</html>
