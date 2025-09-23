@@ -38,7 +38,7 @@ class WebSearch:
         from bambooai import models
 
         self.models = models
-        self.agent = 'Web Search Executor'
+        self.agent = 'Google Search Executor'
         
     def _extract_search_query(self,messages: str) -> str:
         query = messages[-1]['content']
@@ -46,7 +46,7 @@ class WebSearch:
         search_query = f"Search Internet for: {search_query}"
         return search_query
     
-    def _call_search(self,search_query: str) -> str:
+    def _call_search(self,search_query: str):
 
         model_id = self.models.get_model_name(self.agent)[0]
         provider = self.models.get_model_name(self.agent)[1]

@@ -88,7 +88,6 @@ def llm_stream(prompt_manager, log_and_call_manager, output_manager, chain_id: s
         search_triplets.append(triplet)
 
     def get_response(model, provider, messages, temperature, max_tokens, tools, response_format, reasoning_models=None, reasoning_effort="low"):
-        print(f"Using model: {model} from provider: {provider}")
         if reasoning_models and model in reasoning_models:
             output_manager.display_tool_info('Thinking', f"Reasoning Effort: {reasoning_effort}", chain_id=chain_id)
             return completion(
