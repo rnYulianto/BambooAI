@@ -1,5 +1,5 @@
 import litellm
-from litellm import responses, RateLimitError, completion
+from litellm import RateLimitError, completion
 import os
 
 import json
@@ -14,7 +14,7 @@ request_user_context = context_retrieval.request_user_context
 
 def init(provider='openai'):
     if provider != 'openai':
-        return
+        raise ValueError("Only 'openai' provider is supported.")
     API_KEY = os.environ.get('OPENAI_API_KEY')
     if API_KEY is None:
         raise ValueError("OPENAI_API_KEY environment variable is not set.")
