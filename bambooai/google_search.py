@@ -68,26 +68,19 @@ class WebSearch:
     def _parse_response(self,response: str, output_manager, chain_id) -> str:
         top_links = []
         answer = ""
-        metadata = response.candidates[0].grounding_metadata
-        search_html = None
-
-        for part in response.candidates[0].content.parts:
-            # Concatenate the strings separated by a new line in the 'parts' list
-            if part.text:
-                answer += part.text + '\n'
-        for chunk in metadata.grounding_chunks:
-            if chunk.web:
-                top_links.append({
-                        'title': chunk.web.title,
-                        'link': chunk.web.uri
-                    })
-            # Check if search_entry_point exists and is not None before accessing rendered_content
-            if hasattr(metadata, 'search_entry_point') and metadata.search_entry_point is not None and hasattr(metadata.search_entry_point, 'rendered_content'):
-                search_html = metadata.search_entry_point.rendered_content
         
-        # Output the search_entry_point HTML as a JSON structure
-        if search_html:
-            output_manager.send_html_content(search_html, chain_id=chain_id)
+        answer = response.get('choices', [{}])[0].get('message', {}).get('content', '')
+        links = response.get('choices', [{}])[0].get('message', {}).get('annotations', [])
+
+        for link in links:
+            if link.get('type') == 'url_citation':
+                url_citation = link.get("url_citation", {})
+                top_links.append({
+                    'title': url_citation.get("title"),
+                    'url': url_citation.get("url")
+                })
+            else:
+                continue
 
         return answer, top_links     
     
