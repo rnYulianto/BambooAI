@@ -1,5 +1,5 @@
+/* Light theme (default) */
 :root {
-    /* Light theme (default) */
     --bg-primary: #ffffff;
     --bg-secondary: #f8f8f8;
     --bg-tertiary: #f5f5f7;
@@ -7,24 +7,24 @@
     --text-secondary: #666666;
     --text-tertiary: #999999;
     --border-color: #dddddd;
-    --accent-color: #35c477;
-    --accent-hover: #2a9d5d;
+    --accent-color: #00b3e6;
+    --accent-hover: #009ac9;
     --code-bg: #f8f8f8;
     --code-text: #333333;
-    --code-keyword: #229922; /* Brighter green for keywords */
+    --code-keyword: #0074c2;
     --code-string: #727272;
     --code-comment: #999999;
     --yaml-bg: #f5f5f5;
-    --yaml-key: #018c01; /* Dark green in light mode */
-    --yaml-value: #006600;
+    --yaml-key: #0074c2;
+    --yaml-value: #005b99;
     --error-bg: #fff0f0;
     --error-color: #ff0000;
     --shadow-color: rgba(0, 0, 0, 0.1);
     --tool-call-bg: #f8f8f8;
-    --tool-call-border: #35c477;
-    --tool-call-thinking-border: #35c477;
+    --tool-call-border: #00b3e6;
+    --tool-call-thinking-border: #00b3e6;
     --tool-call-text: #555555;
-    --success-color: #35c477;
+    --success-color: #00b3e6;
     --mermaid-bg: #f5f5f5;
     --dataframe-header-bg: #f8f9fa;
     --dataframe-header-text: #2c3e50;
@@ -34,60 +34,57 @@
     --modal-bg: #f8f8f8;
     --modal-text: #444444;
     --star-inactive: #cccccc;
-    --summary-popup-bg: #e6ffe6;
-    --summary-popup-border: #99ff99;
-    --summary-popup-text: #006400;
+    --summary-popup-bg: #e6f7ff;
+    --summary-popup-border: #99ddff;
+    --summary-popup-text: #005b99;
     --system-message-bg: #f0f8f0;
-    --system-message-text: #35c477;
+    --system-message-text: #00b3e6;
     --research-item-bg: #f9f9f9;
     --research-header: #2c3e50;
     --link-hover-bg: #f0f8f4;
     --scrollbar-thumb: #d1d1d1;
     --scrollbar-track: #f1f1f1;
-    --highlight-bg: rgba(53, 196, 119, 0.2);
+    --highlight-bg: rgba(0, 179, 230, 0.2);
     --overlay-bg: rgba(0, 0, 0, 0.5);
     --warning-color: #ff9800;
-    --mermaid-diagram-bg: #1E2730; /* Consistent across themes for contrast */
+    --mermaid-diagram-bg: #1E2730;
     --mermaid-primary-color: #384B5E;
     --mermaid-text-color: #C1DAFF;
-    --success-color-primary-bg: #e6f7ef; /* Light green background for light theme */
-    --success-color-auxiliary-bg: #e0f2e8; /* Slightly different light green for light theme */
-    --error-color-bg: #fff0f0; /* For error pills in light theme */
-    --bg-tertiary: #f5f5f7; /* Ensure this is defined */
-    --text-secondary: #666666; /* Ensure this is defined */
-    --border-color: #dddddd; /* Ensure this is defined */
-    --info-color: #2978b5;         /* Example: A distinct blue */
-    --info-color-bg: #eaf2f8;      /* Light blue background for light theme */
-    --info-color-hover-bg: #d5e5f1;/* Slightly darker for hover */
+    --success-color-primary-bg: #e6f7ff;
+    --success-color-auxiliary-bg: #d5efff;
+    --error-color-bg: #fff0f0;
+    --info-color: #2978b5;
+    --info-color-bg: #eaf2f8;
+    --info-color-hover-bg: #d5e5f1;
 }
 
 /* Dark theme */
 [data-theme="dark"] {
-    --bg-primary: #2a2a2a; /* Dark grey instead of black */
+    --bg-primary: #2a2a2a;
     --bg-secondary: #333333;
     --bg-tertiary: #3a3a3a;
     --text-primary: #e0e0e0;
     --text-secondary: #b0b0b0;
     --text-tertiary: #888888;
     --border-color: #555555;
-    --accent-color: #50fa7b; /* Brighter green for dark mode */
-    --accent-hover: #3dd688;
-    --code-bg: #333333; /* Dark grey for code background */
-    --code-text: #e0e0e0; /* Light grey for text */
-    --code-keyword: #50fa7b; /* Bright green for keywords */
-    --code-string: #b0b0b0; /* Medium grey for strings */
-    --code-comment: #888888; /* Lighter grey for comments */
-    --yaml-bg: #333333; /* Dark grey for YAML background */
-    --yaml-key: #509ffa; /* Brighter blue for keys in dark mode */
-    --yaml-value: #b0ffb0; /* Light green for values */
+    --accent-color: #00b3e6;
+    --accent-hover: #009ac9;
+    --code-bg: #333333;
+    --code-text: #e0e0e0;
+    --code-keyword: #50caff;
+    --code-string: #b0b0b0;
+    --code-comment: #888888;
+    --yaml-bg: #333333;
+    --yaml-key: #50caff;
+    --yaml-value: #a0dcff;
     --error-bg: #4a2a2a;
     --error-color: #ff6b6b;
     --shadow-color: rgba(0, 0, 0, 0.3);
     --tool-call-bg: #333333;
-    --tool-call-border: #50fa7b;
-    --tool-call-thinking-border: #50fa7b;
+    --tool-call-border: #00b3e6;
+    --tool-call-thinking-border: #00b3e6;
     --tool-call-text: #b0b0b0;
-    --success-color: #50fa7b;
+    --success-color: #00b3e6;
     --mermaid-bg: #3a3a3a;
     --dataframe-header-bg: #444444;
     --dataframe-header-text: #e0e0e0;
@@ -97,25 +94,22 @@
     --modal-bg: #333333;
     --modal-text: #e0e0e0;
     --star-inactive: #666666;
-    --summary-popup-bg: #2a3a2a;
-    --summary-popup-border: #50fa7b;
-    --summary-popup-text: #b0ffb0;
+    --summary-popup-bg: #1e2f3a;
+    --summary-popup-border: #00b3e6;
+    --summary-popup-text: #a0dcff;
     --system-message-bg: #2a3a2a;
-    --system-message-text: #50fa7b;
+    --system-message-text: #00b3e6;
     --research-item-bg: #3a3a3a;
     --research-header: #e0e0e0;
     --link-hover-bg: #4a4a4a;
     --scrollbar-thumb: #555555;
     --scrollbar-track: #2a2a2a;
-    --highlight-bg: rgba(80, 250, 123, 0.3);
+    --highlight-bg: rgba(0, 179, 230, 0.3);
     --overlay-bg: rgba(0, 0, 0, 0.7);
     --warning-color: #ffb74d;
-    --success-color-primary: #50fa7b;
-    --success-color-auxiliary: #3dd688; /* Or another distinct accent for auxiliary if desired */
+    --success-color-primary: #00b3e6;
+    --success-color-auxiliary: #009ac9;
     --error-color: #ff6b6b;
-    --bg-tertiary: #3a3a3a;
-    --text-secondary: #b0b0b0;
-    --border-color: #555555;
     --info-color: #5dade2;
 }
 
@@ -532,6 +526,64 @@ body, html {
     background-color: rgba(93, 173, 226, 0.1); /* Subtle hover using dark theme info color */
 }
 
+/* --- SweatStack Dataset Pill Styles --- */
+.sweatstack-dataset-pill.loading { /* Same as other loading pills */
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+.sweatstack-dataset-pill.error { /* Same as other error pills */
+    background-color: var(--error-color-bg);
+    color: var(--error-color);
+    border-color: var(--error-color);
+}
+.sweatstack-dataset-pill.error .dataset-pill-remove-icon svg {
+    stroke: var(--error-color);
+}
+
+/* Success State for SweatStack Pill - Light Theme */
+.sweatstack-dataset-pill.success {
+    background-color: var(--success-color-primary-bg); /* Use same green background as primary */
+    color: var(--success-color); /* Use standard success green */
+    border-color: var(--success-color);
+}
+.sweatstack-dataset-pill.success .dataset-pill-remove-icon svg {
+    stroke: var(--success-color);
+}
+.sweatstack-dataset-pill.success:hover {
+    background-color: var(--success-color-auxiliary-bg); /* Slightly different green on hover */
+}
+
+/* Success State for SweatStack Pill - Dark Theme (No Fill) */
+[data-theme="dark"] .sweatstack-dataset-pill.success {
+    background-color: transparent;
+    color: var(--success-color-primary); /* Use primary success green for dark theme */
+    border: 1px solid var(--success-color-primary);
+}
+[data-theme="dark"] .sweatstack-dataset-pill.success .dataset-pill-remove-icon svg {
+    stroke: var(--success-color-primary);
+}
+[data-theme="dark"] .sweatstack-dataset-pill.success:hover {
+    background-color: rgba(80, 250, 123, 0.08); /* Same hover effect as primary pill */
+}
+
+/* --- SweatStack Modal Styles (Final Compact Version) --- */
+
+/* Base for all SweatStack modals - reduced padding */
+#sweatstackModal .modal-content,
+#sweatstackConfigModal .modal-content,
+#sweatstackAuthenticatedModal .modal-content {
+    background-color: var(--modal-bg);
+    color: var(--modal-text);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px var(--shadow-color);
+    width: 360px; /* Standardized width */
+    max-width: 90%;
+    text-align: left;
+    padding: 20px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
 /* General Header for all modals */
 .modal-header-section {
     display: flex;
@@ -554,6 +606,102 @@ body, html {
 
 /* --- Specific styles for the Data Selection Modal --- */
 
+#sweatstackModal .modal-content {
+    padding: 16px; /* Even tighter padding */
+}
+
+/* Section container with a subtle, enclosing border */
+#sweatstackModal .modal-section {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+/* Section title styling */
+#sweatstackModal h4 {
+    margin: 0 0 8px 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Selection options container */
+#sweatstackModal .sports-selection,
+#sweatstackModal .time-window-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Individual selection option */
+#sweatstackModal .sport-option,
+#sweatstackModal .time-option {
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+#sweatstackModal .sport-option:hover,
+#sweatstackModal .time-option:hover {
+    background-color: var(--bg-tertiary);
+}
+
+#sweatstackModal .sport-option input,
+#sweatstackModal .time-option input {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-color);
+}
+
+#sweatstackModal .sport-option span,
+#sweatstackModal .time-option span {
+    color: var(--modal-text);
+    font-size: 14px;
+}
+
+/* Warning Note - No left border, styled to match sections */
+#sweatstackModal .warning-note {
+    color: var(--text-secondary) !important;
+    font-style: italic;
+    font-size: 12px;
+    margin: 8px 0 0 0 !important;
+    padding: 8px;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+/* Final button - reduced top margin */
+#sweatstackModal .circular-button {
+    margin-top: 12px;
+}
+
+/* --- Styles for other modals (Config, Authenticated) --- */
+
+#sweatstackConfigModal p,
+#sweatstackAuthenticatedModal p {
+    color: var(--modal-text);
+    line-height: 1.5;
+    margin-bottom: 16px;
+    font-size: 14px;
+    text-align: center; /* Center the text content */
+}
+
+#sweatstackConfigModal a {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+#sweatstackConfigModal a:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+}
 
 /* --- Shared Helper Classes (Buttons, Labels) --- */
 
@@ -619,19 +767,6 @@ body, html {
     color: var(--text-secondary);
 }
 
-.circular-button.loading {
-    pointer-events: none;
-}
-
-.circular-button.loading svg {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
 /* --- Generic Toast System --- */
 
 .summary-popup.system-message {
@@ -672,6 +807,74 @@ body, html {
 [data-theme="dark"] .summary-popup.system-message pre,
 [data-theme="dark"] .summary-popup.system-message .close-button {
     color: var(--system-message-text);
+}
+
+/* --- Modern Pill-Style Controls with Checkmark Indicator --- */
+
+/* Hide the original radio/checkbox inputs */
+#sweatstackModal .sport-option input,
+#sweatstackModal .time-option input {
+    opacity: 0;
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+/* The container for the pills */
+#sweatstackModal .sports-selection,
+#sweatstackModal .time-window-selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border: none;
+    padding: 0;
+    background-color: transparent;
+}
+
+/* Style each option as an individual pill */
+#sweatstackModal .sport-option,
+#sweatstackModal .time-option {
+    display: flex; /* This is key for aligning the icon and text */
+    align-items: center;
+    flex-grow: 0;
+    padding: 6px 12px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: transparent; /* Explicitly no background */
+    transition: all 0.2s ease;
+}
+
+/* The checkmark icon is hidden by default */
+#sweatstackModal .check-icon {
+    display: none;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    stroke: currentColor; /* Inherits the color from the parent label */
+}
+
+/* Hover state for non-selected pills */
+#sweatstackModal .sport-option:not(.selected):hover,
+#sweatstackModal .time-option:not(.selected):hover {
+    border-color: var(--accent-hover);
+    color: var(--accent-color);
+}
+
+/* The selected state: changes border/text color and shows the checkmark */
+#sweatstackModal .sport-option.selected,
+#sweatstackModal .time-option.selected {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background-color: transparent; /* NO FILL */
+}
+
+/* This rule makes the checkmark visible when the pill is selected */
+#sweatstackModal .selected .check-icon {
+    display: inline-block;
 }
 
 #contentOutput {
