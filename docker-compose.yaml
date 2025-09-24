@@ -7,19 +7,11 @@ services:
     ports:
       - "5001:5000"
     volumes:
-      # Mount local configuration files
-      - ./.env:/app/web_app/.env
-      - ./.env:/app/.env
-      - ./web_app/LLM_CONFIG.json:/app/web_app/LLM_CONFIG.json
-      
-      # Mount persistent storage directories
-      - ./web_app/storage:/app/web_app/storage
-      - ./web_app/temp:/app/web_app/temp
-      - ./web_app/logs:/app/web_app/logs
-
-      # Mount BambooAI
       - ./bambooai:/app/bambooai
-    
+      - ./web_app:/app/web_app
+      - ./.env:/app/web_app/.env
+      - ./LLM_CONFIG.json:/app/web_app/LLM_CONFIG.json
+
     # Restart policy
     restart: unless-stopped
     command: gunicorn --bind 0.0.0.0:5000 app:app --reload
