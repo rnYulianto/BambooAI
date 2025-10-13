@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARUNA - Masuk</title>
+  <title>ARUNA - Daftar</title>
+
+  <!-- ✅ Tambahkan Google Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
     body {
       margin: 0;
@@ -41,7 +45,7 @@
       margin-top: 0;
     }
 
-    .login-box {
+    .signup-box {
       background: white;
       color: #333;
       padding: 40px 50px;
@@ -53,11 +57,11 @@
       transition: 0.3s ease-in-out;
     }
 
-    .login-box:hover {
+    .signup-box:hover {
       transform: translateY(-2px);
     }
 
-    .login-box h4 {
+    .signup-box h4 {
       margin-bottom: 20px;
       color: #555;
       font-weight: 600;
@@ -74,8 +78,8 @@
 
     button {
       width: 100%;
-      background-color: #007bff;
-      color: white;
+      background-color: #f7d047;
+      color: #333;
       padding: 10px;
       border: none;
       border-radius: 6px;
@@ -87,7 +91,7 @@
     }
 
     button:hover {
-      background-color: #0056b3;
+      background-color: #f5c623;
     }
 
     p {
@@ -119,14 +123,15 @@
     <h3>Asisten Riset untuk Ulasan dan Narasi Analitik</h3>
   </div>
 
-  <div class="login-box">
-    <h4>Masuk ke akun Anda</h4>
-    <form method="POST" action="/login">
+  <div class="signup-box">
+    <h4>Buat akun baru</h4>
+    <form method="POST" action="/sign-up">
+      <input type="text" name="name" placeholder="Nama lengkap" required />
       <input type="email" name="email" placeholder="Email" required />
       <input type="password" name="password" placeholder="Kata sandi" required />
-      <button type="submit">Masuk</button>
+      <button type="submit">Daftar</button>
     </form>
-    <p>Belum punya akun? <a href="{{ url_for('sign_up') }}">Daftar sekarang</a></p>
+    <p>Sudah punya akun? <a href="{{ url_for('index') }}">Masuk</a></p>
   </div>
 
   <footer>© 2025 Tim GEN-AI DAPS</footer>

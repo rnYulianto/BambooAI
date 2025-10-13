@@ -382,19 +382,39 @@ def ensure_session():
 
 @app.route('/')
 def index():
-    common_context = {
-        'sweatstack_enabled': bool(SWEATSTACK_CLIENT_ID and SWEATSTACK_CLIENT_SECRET),
-        'sweatstack_authenticated': bool(session.get('sweatstack_access_token'))
-    }
-    return render_template('index.html', **common_context)
+    # Landing page ARUNA (login)
+    return render_template('index.html')
 
-@app.route("/sign-up")
+
+@app.route("/sign-up", methods=["GET", "POST"])
 def sign_up():
-    return render_template("build/pages/sign-up.html")
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        print(f"[REGISTER] {name} - {email}")
+        return redirect(url_for("index"))  # balik ke login setelah daftar
+    return render_template("sign-up.html")
 
-@app.route("/sign-in")
-def sign_in():
-    return render_template("build/pages/sign-in.html")
+@app.route("/login", methods=["POST"])
+def login():
+    email = request.form.get("email")
+    password = request.form.get("password")
+
+    if email and password:
+        print(f"User logged in: {email}")
+        # setelah login, buka halaman utama BambooAI
+        return redirect(url_for("app_main"))
+    
+    # kalau gagal, kembali ke login
+    return redirect(url_for("index"))
+
+
+@app.route('/app')
+def app_main():
+    # Halaman utama BambooAI (chat UI)
+    return render_template('build/index.html')
+
 
 # New endpoint to update planning preference
 @app.route('/update_planning', methods=['POST'])
