@@ -1,38 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ARUNA AI</title>
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.18/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <link rel="icon" type="image/svg+xml" href="/static/image/favicon.svg" id="favicon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="/static/image/favicon.svg"
+      id="favicon"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
 
     <!-- LocalForage dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 
     <!-- KaTeX dependencies -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
     <!-- Configure marked to handle LaTeX safely -->
     <script>
-    // Configure marked to not escape our LaTeX delimiters
-    const renderer = new marked.Renderer();
-    const originalCode = renderer.code.bind(renderer);
+      // Configure marked to not escape our LaTeX delimiters
+      const renderer = new marked.Renderer();
+      const originalCode = renderer.code.bind(renderer);
 
-    renderer.code = function(code, language) {
-        if (language === 'math' || language === 'latex') {
-            return code;  // Don't wrap in code blocks
+      renderer.code = function (code, language) {
+        if (language === "math" || language === "latex") {
+          return code; // Don't wrap in code blocks
         }
         return originalCode(code, language);
-    };
+      };
 
-    marked.setOptions({
+      marked.setOptions({
         renderer: renderer,
         breaks: true,
         gfm: true,
@@ -40,133 +54,207 @@
         mangle: false,
         sanitize: false,
         smartLists: true,
-        smartypants: false
-    });
+        smartypants: false,
+      });
     </script>
-        
+
     <!-- CodeMirror Core -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
 
     <!-- CodeMirror Theme -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css"
+    />
 
     <!-- CodeMirror Python Mode -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
 
     <!-- Plotly -->
     <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
-
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <button id="collapseButton" class="collapse-button" aria-label="Toggle left panel">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-            </svg>
-        </button>
-        <div class="left-panel" id="leftPanel">
-            <div class="top-panel">
-                <div class="menu-container">
-                    <button id="menuButton" class="menu-button" title="Menu">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="4" y1="8" x2="20" y2="8"></line>
-                            <line x1="4" y1="12" x2="20" y2="12"></line>
-                            <line x1="4" y1="16" x2="20" y2="16"></line>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="content-area">
-                <div id="streamOutput"></div>
-                <div class="scroll-indicator">↓</div>
-            </div>           
-            <div class="input-area">
-                <div class="input-row">
-                    <div class="textarea-container">
-                        <textarea
-                            id="queryInput"
-                            placeholder="Enter your query here"
-                        ></textarea>
-                    
-                        <div class="icon-row">
-                            <!-- Paperclip with menu -->
-                            <div class="attach-menu-container">
-                                <button
-                                    id="uploadButton"
-                                    type="button"
-                                    class="icon-button attach-icon"
-                                    title="Attach dataset"
-                                >
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <path
-                                            d="M21.44 11.05l-9.19 9.19a6 6 0 0 1
+      <button
+        id="collapseButton"
+        class="collapse-button"
+        aria-label="Toggle left panel"
+      >
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+        </svg>
+      </button>
+      <div class="left-panel" id="leftPanel">
+        <div class="top-panel">
+          <div class="menu-container">
+            <button id="menuButton" class="menu-button" title="Menu">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="4" y1="8" x2="20" y2="8"></line>
+                <line x1="4" y1="12" x2="20" y2="12"></line>
+                <line x1="4" y1="16" x2="20" y2="16"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="content-area">
+          <div id="streamOutput"></div>
+          <div class="scroll-indicator">↓</div>
+        </div>
+        <div class="input-area">
+          <div class="input-row">
+            <div class="textarea-container">
+              <textarea
+                id="queryInput"
+                placeholder="Enter your query here"
+              ></textarea>
+
+              <div class="icon-row">
+                <!-- Paperclip with menu -->
+                <div class="attach-menu-container">
+                  <button
+                    id="uploadButton"
+                    type="button"
+                    class="icon-button attach-icon"
+                    title="Attach dataset"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M21.44 11.05l-9.19 9.19a6 6 0 0 1
                                                -8.49-8.49l8.57-8.57A4 4 0 1 1
                                                18 8.84l-8.59 8.57a2 2 0 0 1
                                                -2.83-2.83l8.49-8.48"
-                                        />
-                                    </svg>
-                                </button>
-            
-                                <!-- New attach menu -->
-                                <div class="attach-menu">
-                                    <button class="attach-option primary-dataset-option" title="Upload Primary Dataset">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                                            <polyline points="13 2 13 9 20 9"></polyline>
-                                        </svg>
-                                        <span>Primary Dataset</span>
-                                    </button>
-                                    <button class="attach-option auxiliary-dataset-option" title="Upload Auxiliary Dataset">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                                            <polyline points="2 17 12 22 22 17"></polyline>
-                                            <polyline points="2 12 12 17 22 12"></polyline>
-                                        </svg>
-                                        <span>Auxiliary Dataset</span>
-                                    </button>
-                                    <button class="attach-option ontology-upload-option" title="Upload/Manage Ontology">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                                        </svg>
-                                        <span>Ontology</span>
-                                    </button>
-                                    <div id="uploadLimitMessage" class="upload-limit-message"></div>
-                                </div>
-                            </div>
-            
-                            <input type="file" id="primaryFile" accept=".csv,.parquet" style="display: none" />
-                            <input type="file" id="auxiliaryFile" accept=".csv,.parquet" style="display: none" />
-                            <input type="file" id="ontologyUploadFile" accept=".ttl" style="display: none" />
-                            
-                            <!-- Planning brain -->
-                            <button
-                                id="planningSwitch"
-                                type="button"
-                                class="icon-button planning-brain"
-                                aria-checked="false"
-                                title="Planning"
-                            >
-                                <svg
-                                    width="20"
-                                    height="20"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        d="M9.5 2A2.5 2.5 0 0 1
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- New attach menu -->
+                  <div class="attach-menu">
+                    <button
+                      class="attach-option primary-dataset-option"
+                      title="Upload Primary Dataset"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path
+                          d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"
+                        ></path>
+                        <polyline points="13 2 13 9 20 9"></polyline>
+                      </svg>
+                      <span>Primary Dataset</span>
+                    </button>
+                    <button
+                      class="attach-option auxiliary-dataset-option"
+                      title="Upload Auxiliary Dataset"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                      </svg>
+                      <span>Auxiliary Dataset</span>
+                    </button>
+                    <button
+                      class="attach-option ontology-upload-option"
+                      title="Upload/Manage Ontology"
+                    >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path
+                          d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+                        />
+                        <path
+                          d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+                        />
+                      </svg>
+                      <span>Ontology</span>
+                    </button>
+                    <div
+                      id="uploadLimitMessage"
+                      class="upload-limit-message"
+                    ></div>
+                  </div>
+                </div>
+
+                <input
+                  type="file"
+                  id="primaryFile"
+                  accept=".csv,.parquet"
+                  style="display: none"
+                />
+                <input
+                  type="file"
+                  id="auxiliaryFile"
+                  accept=".csv,.parquet"
+                  style="display: none"
+                />
+                <input
+                  type="file"
+                  id="ontologyUploadFile"
+                  accept=".ttl"
+                  style="display: none"
+                />
+
+                <!-- Planning brain -->
+                <button
+                  id="planningSwitch"
+                  type="button"
+                  class="icon-button planning-brain"
+                  aria-checked="false"
+                  title="Planning"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M9.5 2A2.5 2.5 0 0 1
                                             12 4.5v15a2.5 2.5 0 0 1
                                             -4.96.44 2.5 2.5 0 0 1
                                             -2.96-3.08 3 3 0 0 1
@@ -174,9 +262,9 @@
                                             1.32-4.24 2.5 2.5 0 0 1
                                             1.98-3A2.5 2.5 0 0 1
                                             9.5 2Z"
-                                    />
-                                    <path
-                                        d="M14.5 2A2.5 2.5 0 0 0
+                    />
+                    <path
+                      d="M14.5 2A2.5 2.5 0 0 0
                                             12 4.5v15a2.5 2.5 0 0 0
                                             4.96.44 2.5 2.5 0 0 0
                                             2.96-3.08 3 3 0 0 0
@@ -184,256 +272,425 @@
                                             -1.32-4.24 2.5 2.5 0 0
                                             0 -1.98-3A2.5 2.5 0 0
                                             0 14.5 2Z"
-                                    />
-                                </svg>
-                            </button>
-                            
-                            <!-- Grow Ideas -->
-                            <button
-                                id="suggestQuestions"
-                                type="button"
-                                class="icon-button filter-icon suggest-questions disabled"
-                                title="Grow New Ideas"
-                                >
-                                <!-- Icon from Tabler Icons (tabler.io) -->
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"></path>
-                                    <path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"></path>
-                                    <path d="M12 20l0 -10"></path>
-                                </svg>
-                            </button>
+                    />
+                  </svg>
+                </button>
 
-                            <!-- Branching CV Icons Popup -->
-                            <div id="branchingSliderPopup" class="branching-slider-popup">
-                                <button class="branching-icon" data-value="5" title="Follow emergence - pursue interesting patterns that appeared unexpectedly in our investigation">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"></path>
-                                        <path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"></path>
-                                        <path d="M12 20l0 -10"></path>
-                                    </svg>
-                                </button>
-                                <button class="branching-icon" data-value="4" title="Blend elements - combine two aspects from our current exploration in a new way">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"></path>
-                                        <path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"></path>
-                                        <path d="M12 20l0 -10"></path>
-                                    </svg>
-                                </button>
-                                <button class="branching-icon" data-value="3" title="Test boundaries - explore what happens at the edges of our current assumptions">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"></path>
-                                        <path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"></path>
-                                        <path d="M12 20l0 -10"></path>
-                                    </svg>
-                                </button>
-                                <button class="branching-icon" data-value="2" title="Shift angle - examine the same subject from a different perspective or framework">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"></path>
-                                        <path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"></path>
-                                        <path d="M12 20l0 -10"></path>
-                                    </svg>
-                                </button>
-                                <button class="branching-icon" data-value="1" title="Refine focus - adjust scope, granularity, or specific parameters within the same inquiry">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"></path>
-                                        <path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"></path>
-                                        <path d="M12 20l0 -10"></path>
-                                    </svg>
-                                </button>
-                            </div>
+                <!-- Grow Ideas -->
+                <button
+                  id="suggestQuestions"
+                  type="button"
+                  class="icon-button filter-icon suggest-questions disabled"
+                  title="Grow New Ideas"
+                >
+                  <!-- Icon from Tabler Icons (tabler.io) -->
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"
+                    ></path>
+                    <path
+                      d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"
+                    ></path>
+                    <path d="M12 20l0 -10"></path>
+                  </svg>
+                </button>
 
-                            <!-- Rank Solution -->
-                            <button id="rankButton" type="button" class="icon-button rank-icon" title="Save Memory" style="display: none;">
-                                <svg
-                                    width="20"
-                                    height="20"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                                </svg>
-                            </button>
-                        </div>
-                    
-                        <!-- Submit button -->
-                        <button
-                            id="submitQuery"
-                            class="submit-button"
-                            aria-label="Submit query"
-                        >
-                            <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="m22 2-7 20-4-9-9-4Z" />
-                                <path d="M22 2 11 13" />
-                            </svg>
-                        </button>
-                    </div>
+                <!-- Branching CV Icons Popup -->
+                <div id="branchingSliderPopup" class="branching-slider-popup">
+                  <button
+                    class="branching-icon"
+                    data-value="5"
+                    title="Follow emergence - pursue interesting patterns that appeared unexpectedly in our investigation"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"
+                      ></path>
+                      <path
+                        d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"
+                      ></path>
+                      <path d="M12 20l0 -10"></path>
+                    </svg>
+                  </button>
+                  <button
+                    class="branching-icon"
+                    data-value="4"
+                    title="Blend elements - combine two aspects from our current exploration in a new way"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"
+                      ></path>
+                      <path
+                        d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"
+                      ></path>
+                      <path d="M12 20l0 -10"></path>
+                    </svg>
+                  </button>
+                  <button
+                    class="branching-icon"
+                    data-value="3"
+                    title="Test boundaries - explore what happens at the edges of our current assumptions"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"
+                      ></path>
+                      <path
+                        d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"
+                      ></path>
+                      <path d="M12 20l0 -10"></path>
+                    </svg>
+                  </button>
+                  <button
+                    class="branching-icon"
+                    data-value="2"
+                    title="Shift angle - examine the same subject from a different perspective or framework"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"
+                      ></path>
+                      <path
+                        d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"
+                      ></path>
+                      <path d="M12 20l0 -10"></path>
+                    </svg>
+                  </button>
+                  <button
+                    class="branching-icon"
+                    data-value="1"
+                    title="Refine focus - adjust scope, granularity, or specific parameters within the same inquiry"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"
+                      ></path>
+                      <path
+                        d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"
+                      ></path>
+                      <path d="M12 20l0 -10"></path>
+                    </svg>
+                  </button>
                 </div>
-            
-                <!-- File status messages -->
-                <div id="datasetStatusPillsContainer"></div>
-            </div>            
-        </div>
-        <div class="right-panel" id="rightPanel">
-            <div class="panel-header">
-                <div class="tab-navigation">
-                    <button id="prevResponse" class="nav-arrow" disabled>&larr;</button>
-                    <button id="nextResponse" class="nav-arrow" disabled>&rarr;</button>
-                </div>
+
+                <!-- Rank Solution -->
+                <button
+                  id="rankButton"
+                  type="button"
+                  class="icon-button rank-icon"
+                  title="Save Memory"
+                  style="display: none"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Submit button -->
+              <button
+                id="submitQuery"
+                class="submit-button"
+                aria-label="Submit query"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="m22 2-7 20-4-9-9-4Z" />
+                  <path d="M22 2 11 13" />
+                </svg>
+              </button>
             </div>
-            <div class="tab-container" id="tabContainer"></div>
-            <div id="contentOutput"></div>
+          </div>
+
+          <!-- File status messages -->
+          <div id="datasetStatusPillsContainer"></div>
         </div>
+      </div>
+      <div class="right-panel" id="rightPanel">
+        <div class="panel-header">
+          <div class="tab-navigation">
+            <button id="prevResponse" class="nav-arrow" disabled>&larr;</button>
+            <button id="nextResponse" class="nav-arrow" disabled>&rarr;</button>
+          </div>
+        </div>
+        <div class="tab-container" id="tabContainer"></div>
+        <div id="contentOutput"></div>
+      </div>
     </div>
 
     <div class="menu-popup">
-        <img src="/static/image/logo_light.svg" alt="Logo" class="menu-logo">
-        <div class="settings-container">
-            <button class="settings-button" aria-label="Settings">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-            </button>
-            
-            <div class="settings-popup">
-                <!-- Theme toggle first - simplified -->
-                <button id="themeToggle" class="settings-option theme-toggle-option">
-                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="5"/>
-                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-                    </svg>
-                    <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
-                    <span class="theme-label">Light Theme</span>
-                </button>
+      <img src="/static/image/logo_light.svg" alt="Logo" class="menu-logo" />
+      <div class="settings-container">
+        <button class="settings-button" aria-label="Settings">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+            ></path>
+          </svg>
+        </button>
 
-                <a href="https://github.com/pgalko/BambooAI" target="_blank" rel="noopener noreferrer" class="settings-option">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" stroke="none">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                    <span>Project Page</span>
-                </a>
-                
-                <div class="integrations-menu-item">
-                    <button class="settings-option integrations-option">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="8" cy="8" r="6"></circle>
-                            <circle cx="16" cy="16" r="6"></circle>
-                        </svg>
-                        <span>Landing Page</span>
-                        <span class="submenu-arrow">›</span>
-                    </button>
-                    <div class="integrations-submenu">
-                        <a href="{{ url_for('login_page') }}" class="settings-option">
-                            <span>Login</span>
-                        </a>
-                        <a href="{{ url_for('register') }}" class="settings-option">
-                            <span>Register</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <div class="settings-popup">
+          <!-- Theme toggle first - simplified -->
+          <button id="themeToggle" class="settings-option theme-toggle-option">
+            <svg
+              class="sun-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <path
+                d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+              />
+            </svg>
+            <svg
+              class="moon-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              style="display: none"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            <span class="theme-label">Light Theme</span>
+          </button>
+
+          <a
+            href="https://github.com/pgalko/BambooAI"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="settings-option"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              stroke="none"
+            >
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+            <span>Project Page</span>
+          </a>
+
+          <a
+            href="{{ url_for('logout') }}"
+            rel="noopener noreferrer"
+            class="settings-option"
+          >
+            <svg
+              width="800px"
+              height="800px"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M14.9453 1.25C13.5778 1.24998 12.4754 1.24996 11.6085 1.36652C10.7084 1.48754 9.95048 1.74643 9.34857 2.34835C8.82363 2.87328 8.55839 3.51836 8.41916 4.27635C8.28387 5.01291 8.25799 5.9143 8.25196 6.99583C8.24966 7.41003 8.58357 7.74768 8.99778 7.74999C9.41199 7.7523 9.74964 7.41838 9.75194 7.00418C9.75803 5.91068 9.78643 5.1356 9.89448 4.54735C9.99859 3.98054 10.1658 3.65246 10.4092 3.40901C10.686 3.13225 11.0746 2.9518 11.8083 2.85315C12.5637 2.75159 13.5648 2.75 15.0002 2.75H16.0002C17.4356 2.75 18.4367 2.75159 19.1921 2.85315C19.9259 2.9518 20.3144 3.13225 20.5912 3.40901C20.868 3.68577 21.0484 4.07435 21.1471 4.80812C21.2486 5.56347 21.2502 6.56459 21.2502 8V16C21.2502 17.4354 21.2486 18.4365 21.1471 19.1919C21.0484 19.9257 20.868 20.3142 20.5912 20.591C20.3144 20.8678 19.9259 21.0482 19.1921 21.1469C18.4367 21.2484 17.4356 21.25 16.0002 21.25H15.0002C13.5648 21.25 12.5637 21.2484 11.8083 21.1469C11.0746 21.0482 10.686 20.8678 10.4092 20.591C10.1658 20.3475 9.99859 20.0195 9.89448 19.4527C9.78643 18.8644 9.75803 18.0893 9.75194 16.9958C9.74964 16.5816 9.41199 16.2477 8.99778 16.25C8.58357 16.2523 8.24966 16.59 8.25196 17.0042C8.25799 18.0857 8.28387 18.9871 8.41916 19.7236C8.55839 20.4816 8.82363 21.1267 9.34857 21.6517C9.95048 22.2536 10.7084 22.5125 11.6085 22.6335C12.4754 22.75 13.5778 22.75 14.9453 22.75H16.0551C17.4227 22.75 18.525 22.75 19.392 22.6335C20.2921 22.5125 21.0499 22.2536 21.6519 21.6517C22.2538 21.0497 22.5127 20.2919 22.6337 19.3918C22.7503 18.5248 22.7502 17.4225 22.7502 16.0549V7.94513C22.7502 6.57754 22.7503 5.47522 22.6337 4.60825C22.5127 3.70814 22.2538 2.95027 21.6519 2.34835C21.0499 1.74643 20.2921 1.48754 19.392 1.36652C18.525 1.24996 17.4227 1.24998 16.0551 1.25H14.9453Z"
+                fill="#1C274C"
+              />
+              <path
+                d="M15 11.25C15.4142 11.25 15.75 11.5858 15.75 12C15.75 12.4142 15.4142 12.75 15 12.75H4.02744L5.98809 14.4306C6.30259 14.7001 6.33901 15.1736 6.06944 15.4881C5.79988 15.8026 5.3264 15.839 5.01191 15.5694L1.51191 12.5694C1.34567 12.427 1.25 12.2189 1.25 12C1.25 11.7811 1.34567 11.573 1.51191 11.4306L5.01191 8.43056C5.3264 8.16099 5.79988 8.19741 6.06944 8.51191C6.33901 8.8264 6.30259 9.29988 5.98809 9.56944L4.02744 11.25H15Z"
+                fill="#1C274C"
+              />
+            </svg>
+            <span>Logout</span>
+          </a>
         </div>
-        <button class="menu-option new-conversation-option" title="New Workflow">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2v6h6"/>
-                <path d="M4 4v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2Z"/>
-                <path d="M12 18v-6"/>
-                <path d="M9 15h6"/>
-            </svg>
-            <span>New Workflow</span>
-        </button>
-        <button class="menu-option workflow-map-option">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 3h6v6H3zM15 3h6v6h-6zM21 15h-6v6h6zM9 15H3v6h6zM12 9v12M9 9H3M15 9h6M12 3v6"/>
-            </svg>
-            <span>Workflow Map</span>
-            <span class="keyboard-shortcut">⌘M</span>
-        </button>
+      </div>
+      <button class="menu-option new-conversation-option" title="New Workflow">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M14 2v6h6" />
+          <path
+            d="M4 4v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2Z"
+          />
+          <path d="M12 18v-6" />
+          <path d="M9 15h6" />
+        </svg>
+        <span>New Workflow</span>
+      </button>
+      <button class="menu-option workflow-map-option">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            d="M3 3h6v6H3zM15 3h6v6h-6zM21 15h-6v6h6zM9 15H3v6h6zM12 9v12M9 9H3M15 9h6M12 3v6"
+          />
+        </svg>
+        <span>Workflow Map</span>
+        <span class="keyboard-shortcut">⌘M</span>
+      </button>
     </div>
 
     <!-- Rank Modal -->
     <div id="rankModal" class="modal">
-        <div class="modal-content">
-            <button class="close" aria-label="Close">×</button>
-            <h3>Rate the Solution</h3>
-            <div id="rankStatusMessage" class="rank-status-message"></div>
-            <div class="star-rating" id="starRating">
-                <input type="radio" id="star10" name="rating" value="10" hidden>
-                <label for="star10" title="10 stars">★</label>
-                <input type="radio" id="star9" name="rating" value="9" hidden>
-                <label for="star9" title="9 stars">★</label>
-                <input type="radio" id="star8" name="rating" value="8" hidden>
-                <label for="star8" title="8 stars">★</label>
-                <input type="radio" id="star7" name="rating" value="7" hidden>
-                <label for="star7" title="7 stars">★</label>
-                <input type="radio" id="star6" name="rating" value="6" hidden>
-                <label for="star6" title="6 stars">★</label>
-                <input type="radio" id="star5" name="rating" value="5" hidden>
-                <label for="star5" title="5 stars">★</label>
-                <input type="radio" id="star4" name="rating" value="4" hidden>
-                <label for="star4" title="4 stars">★</label>
-                <input type="radio" id="star3" name="rating" value="3" hidden>
-                <label for="star3" title="3 stars">★</label>
-                <input type="radio" id="star2" name="rating" value="2" hidden>
-                <label for="star2" title="2 stars">★</label>
-                <input type="radio" id="star1" name="rating" value="1" hidden>
-                <label for="star1" title="1 star">★</label>
-            </div>
-            <div class="knowledge-base-hint">5+ also creates a record in episodic memory if enabled</div>
-            <button id="submit-rank" class="submit-rank-btn" aria-label="Submit rating">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9"></polygon>
-                </svg>
-            </button>
+      <div class="modal-content">
+        <button class="close" aria-label="Close">×</button>
+        <h3>Rate the Solution</h3>
+        <div id="rankStatusMessage" class="rank-status-message"></div>
+        <div class="star-rating" id="starRating">
+          <input type="radio" id="star10" name="rating" value="10" hidden />
+          <label for="star10" title="10 stars">★</label>
+          <input type="radio" id="star9" name="rating" value="9" hidden />
+          <label for="star9" title="9 stars">★</label>
+          <input type="radio" id="star8" name="rating" value="8" hidden />
+          <label for="star8" title="8 stars">★</label>
+          <input type="radio" id="star7" name="rating" value="7" hidden />
+          <label for="star7" title="7 stars">★</label>
+          <input type="radio" id="star6" name="rating" value="6" hidden />
+          <label for="star6" title="6 stars">★</label>
+          <input type="radio" id="star5" name="rating" value="5" hidden />
+          <label for="star5" title="5 stars">★</label>
+          <input type="radio" id="star4" name="rating" value="4" hidden />
+          <label for="star4" title="4 stars">★</label>
+          <input type="radio" id="star3" name="rating" value="3" hidden />
+          <label for="star3" title="3 stars">★</label>
+          <input type="radio" id="star2" name="rating" value="2" hidden />
+          <label for="star2" title="2 stars">★</label>
+          <input type="radio" id="star1" name="rating" value="1" hidden />
+          <label for="star1" title="1 star">★</label>
         </div>
+        <div class="knowledge-base-hint">
+          5+ also creates a record in episodic memory if enabled
+        </div>
+        <button
+          id="submit-rank"
+          class="submit-rank-btn"
+          aria-label="Submit rating"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9"></polygon>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Workflow Map Modal -->
     <div id="workflowMapModal" class="modal">
-        <div class="modal-content workflow-modal-content">
-            <div class="modal-header">
-                <h2>Workflow Map</h2>
-                <button class="close workflow-close">&times;</button>
-            </div>
-            <div class="modal-body workflow-body">
-                <div id="workflowMapContainer" class="workflow-map-container"></div>
-                <div id="workflowDetailsPane" class="workflow-details-pane">
-                    <div class="details-content">
-                        <div id="nodeTaskContent" class="details-text">
-                            Hover over a node to view task details
-                        </div>
-                        <div id="nodePlotPreview" class="details-plot-preview">
-                            <!-- Plot preview will be inserted here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <p class="hint">Click on any node to navigate to that conversation</p>
-            </div>
+      <div class="modal-content workflow-modal-content">
+        <div class="modal-header">
+          <h2>Workflow Map</h2>
+          <button class="close workflow-close">&times;</button>
         </div>
+        <div class="modal-body workflow-body">
+          <div id="workflowMapContainer" class="workflow-map-container"></div>
+          <div id="workflowDetailsPane" class="workflow-details-pane">
+            <div class="details-content">
+              <div id="nodeTaskContent" class="details-text">
+                Hover over a node to view task details
+              </div>
+              <div id="nodePlotPreview" class="details-plot-preview">
+                <!-- Plot preview will be inserted here -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <p class="hint">Click on any node to navigate to that conversation</p>
+        </div>
+      </div>
     </div>
-    
+
     <!-- Summary Popup -->
     <div id="summaryPopup" class="summary-popup">
-        <button class="close-button">&times;</button>
-        <div id="summaryContent"></div>
+      <button class="close-button">&times;</button>
+      <div id="summaryContent"></div>
     </div>
 
     <!-- Load modules in dependency order -->
@@ -444,5 +701,5 @@
     <script src="{{ url_for('static', filename='js/query-processing.js') }}"></script>
     <script src="{{ url_for('static', filename='js/workflow-management.js') }}"></script>
     <script src="{{ url_for('static', filename='js/pdf-export.js') }}"></script>
-</body>
+  </body>
 </html>
