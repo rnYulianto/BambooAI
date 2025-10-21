@@ -453,12 +453,17 @@ def ensure_session():
         }
 
 @app.route('/')
-@login_required
 def index():
+    return render_template('homepage.html')
+
+@app.route('/app')
+@login_required
+def app_main():
     return render_template('index.html')
 
 # New endpoint to update planning preference
 @app.route('/update_planning', methods=['POST'])
+@login_required
 def update_planning():
     session_id = session.get('session_id')
     data = request.json
@@ -500,6 +505,7 @@ def update_planning():
     }), 200
 
 @app.route('/get_planning_state', methods=['GET'])
+@login_required
 def get_planning_state():
     session_id = session.get('session_id')
     
@@ -511,6 +517,7 @@ def get_planning_state():
     return jsonify({'planning_enabled': current_state})
 
 @app.route('/update_ontology', methods=['POST'])
+@login_required
 def update_ontology():
     session_id = session.get('session_id')
     if not session_id:
@@ -577,6 +584,7 @@ def update_ontology():
 
 # New endpoint to get ontology state
 @app.route('/get_ontology_state', methods=['GET'])
+@login_required
 def get_ontology_state():
     session_id = session.get('session_id')
 
@@ -593,6 +601,7 @@ def get_ontology_state():
 
 # Upload primary dataset endpoint
 @app.route('/upload', methods=['POST'])
+@login_required
 def upload_file():
     session_id = session['session_id']
     
@@ -647,7 +656,7 @@ def upload_file():
     
 # Remove primary dataset endpoint
 @login_required
-@roles_required('admin')
+# @roles_required('admin')
 @app.route('/remove_primary_dataset', methods=['POST'])
 def remove_primary_dataset():
     session_id = session.get('session_id')
@@ -692,6 +701,7 @@ def remove_primary_dataset():
         return jsonify({'message': f'Error removing primary dataset: {str(e)}'}), 500
 
 @app.route('/upload_auxiliary_dataset', methods=['POST'])
+@login_required
 def upload_auxiliary_dataset():
     session_id = session['session_id']
     
@@ -778,7 +788,7 @@ def upload_auxiliary_dataset():
     
 # Remove auxiliary dataset endpoint
 @login_required
-@roles_required('admin')
+# @roles_required('admin')
 @app.route('/remove_auxiliary_dataset', methods=['POST'])
 def remove_auxiliary_dataset():
     session_id = session.get('session_id')
@@ -851,6 +861,7 @@ def remove_auxiliary_dataset():
 
 # This endpoint is specifically for the primary dataset preview  
 @app.route('/get_primary_dataset_preview', methods=['POST'])
+@login_required
 def get_primary_dataset_preview():
     session_id = session.get('session_id')
     if not session_id:
@@ -892,6 +903,7 @@ def get_primary_dataset_preview():
 
 # This endpoint is specifically for auxiliary dataset previews
 @app.route('/get_dataset_preview', methods=['POST'])
+@login_required
 def get_dataset_preview():
     session_id = session.get('session_id')
     if not session_id:
@@ -955,6 +967,7 @@ def get_dataset_preview():
         return jsonify({'dataframe_html': df_json_str}), 200
 
 @app.route('/query', methods=['POST'])
+@login_required
 def query():
     session_id = session['session_id']
     bamboo_ai_instance = get_bamboo_ai(session_id)
@@ -1001,6 +1014,7 @@ def query():
     return Response(generate(), mimetype='application/json')
 
 @app.route('/submit_rank', methods=['POST'])
+@login_required
 def submit_rank():
     session_id = session['session_id']
     bamboo_ai_instance = get_bamboo_ai(session_id)
@@ -1040,6 +1054,7 @@ def submit_rank():
     return Response(generate(), mimetype='application/json')
 
 @app.route('/storage/favourites', methods=['POST'])
+@login_required
 def store_favourite():
     """ Store the favourite solution in the storage/favourites directory """
     
@@ -1090,6 +1105,7 @@ def store_favourite():
         return jsonify({'error': f'Server error: {str(e)}'}), 500
     
 @app.route('/get_threads', methods=['GET'])
+@login_required
 def get_threads():
     """Get list of all saved threads with all their chains."""
     try:
@@ -1180,6 +1196,7 @@ def get_threads():
         return jsonify({'error': f"Server error: {str(e)}"}), 500
 
 @app.route('/load_thread/<thread_id>/<chain_id>', methods=['GET'])
+@login_required
 def load_thread(thread_id, chain_id):
     """Load all content for a specific thread and chain."""
     try:
@@ -1239,6 +1256,7 @@ def load_thread(thread_id, chain_id):
         }), 500
     
 @app.route('/get_chain_preview/<thread_id>/<chain_id>', methods=['GET'])
+@login_required
 def get_chain_preview(thread_id, chain_id):
     """Get a preview image or plotly data for a specific chain."""
     try:
@@ -1299,6 +1317,7 @@ def get_chain_preview(thread_id, chain_id):
         return jsonify({'error': f"Server error: {str(e)}"}), 500
     
 @app.route('/delete_chain/<thread_id>/<chain_id>', methods=['DELETE'])
+@login_required
 def delete_chain(thread_id, chain_id):
     """Delete a chain from the favorites directory and vector db if applicable."""
     try:
@@ -1341,11 +1360,13 @@ def delete_chain(thread_id, chain_id):
         return jsonify({'error': f"Server error: {str(e)}"}), 500
 
 @app.route('/new_conversation', methods=['POST'])
+@login_required
 def new_conversation():
     session_id = session['session_id']
     return start_new_conversation(session_id)
 
 @app.route('/submit_feedback', methods=['POST'])
+@login_required
 def submit_feedback():
     data = request.json
     feedback = data.get('feedback')
@@ -1389,6 +1410,7 @@ def submit_feedback():
         return jsonify({'error': f'Failed to store feedback: {str(e)}'}), 500
     
 @app.route('/download_generated_dataset', methods=['GET'])
+@login_required
 def download_generated_dataset():
     file_path_param = request.args.get('path')
 
@@ -1461,12 +1483,14 @@ def download_generated_dataset():
 
 # Endpoint to check if vector database is enabled      
 @app.route('/get_vector_db_status', methods=['GET'])
+@login_required
 def get_vector_db_status():
     """Endpoint to check if the vector database is enabled."""
     return jsonify({'vector_db_enabled': VECTOR_DB})
 
 # Endpoint to search threads in the vector database
 @app.route('/search_threads', methods=['POST'])
+@login_required
 def search_threads():
     """Receives a search query and returns matching results (ID and score) from Pinecone."""
     if not VECTOR_DB:
