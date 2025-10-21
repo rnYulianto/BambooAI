@@ -12,11 +12,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 from queue import Queue, Empty
 from flask import Flask, request, jsonify, Response, render_template, session, send_from_directory, redirect, url_for
-import tempfile
 from dotenv import load_dotenv
-from google.cloud import storage
 from werkzeug.datastructures import FileStorage
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User
@@ -28,7 +25,9 @@ USER_ID = "demo_user"
 
 def user_path(root, *paths):
     """Helper to build a user-specific path."""
-    return os.path.join(root, USER_ID, *paths)
+    full_path = os.path.join(root, USER_ID, *paths)
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    return full_path
 
 
 def cleanup_threads(debug_mode=False):
@@ -166,6 +165,19 @@ with app.app_context():
     db.create_all()
 login_manager = LoginManager(app)
 login_manager.login_view = 'login_page'
+
+# Ensure directories exist
+for base in ['temp', 'iframe_figures', 'logs', 'datasets', 'storage']:
+    os.makedirs(user_path(base), exist_ok=True)
+
+os.makedirs(user_path('storage', 'favourites'), exist_ok=True)
+os.makedirs(user_path('storage', 'threads'), exist_ok=True)
+
+# Run thread cleanup
+cleanup_threads(debug_mode=True)
+
+# Clear datasets folder
+clear_datasets_folder()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -1482,27 +1494,3 @@ def search_threads():
         app.logger.error(f"Error searching threads: {e}")
         return jsonify({'error': 'An error occurred during search'}), 500
 
-if __name__ == '__main__':
-    # Simple command line argument for debug mode
-    parser = argparse.ArgumentParser(description='BambooAI Flask App')
-    parser.add_argument('--debug', action='store_true', help='Skip thread cleanup')
-    args = parser.parse_args()
-    
-    # Ensure directories exist
-    for base in ['temp', 'iframe_figures', 'logs', 'datasets', 'storage']:
-        os.makedirs(user_path(base), exist_ok=True)
-
-    os.makedirs(user_path('storage', 'favourites'), exist_ok=True)
-    os.makedirs(user_path('storage', 'threads'), exist_ok=True)
-    
-    # Run thread cleanup
-    cleanup_threads(debug_mode=args.debug)
-
-    # Clear datasets folder
-    clear_datasets_folder()
-    
-    # Create database tables if they don't exist
-    with app.app_context():
-        db.create_all()
-    # Start the Flask app
-    app.run(host='0.0.0.0', port=5000, debug=False)
