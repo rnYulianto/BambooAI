@@ -21,7 +21,7 @@ if dev_stage == 'dev':
 
 def init(provider='openai'):
     if provider != 'openai':
-        return
+        raise ValueError("Only 'openai' provider is supported.")
     API_KEY = os.environ.get('OPENAI_API_KEY')
     if API_KEY is None:
         raise ValueError("OPENAI_API_KEY environment variable is not set.")
@@ -44,12 +44,12 @@ def llm_call(messages: str,model: str,temperature: str,max_tokens: str, response
 
     try:
         start_time = time.time()
-        response = get_response(provider, model, messages, temperature, max_tokens, response_format)
+        response = get_response(model, provider, messages, temperature, max_tokens, response_format)
         end_time = time.time()
     except RateLimitError:
         time.sleep(10)
         start_time = time.time()
-        response = get_response(provider, model, messages, temperature, max_tokens, response_format)
+        response = get_response(model, provider, messages, temperature, max_tokens, response_format)
         end_time = time.time()
 
     elapsed_time = end_time - start_time
@@ -94,7 +94,7 @@ def llm_stream(prompt_manager, log_and_call_manager, output_manager, chain_id: s
         }
         search_triplets.append(triplet)
 
-    def get_response(provider, model, messages, temperature, max_tokens, tools, response_format, reasoning_models=None, reasoning_effort="low"):
+    def get_response(model, provider, messages, temperature, max_tokens, tools, response_format, reasoning_models=None, reasoning_effort="low"):
         if reasoning_models and model in reasoning_models:
             output_manager.display_tool_info('Thinking', f"Reasoning Effort: {reasoning_effort}", chain_id=chain_id)
             return completion(
@@ -125,7 +125,7 @@ def llm_stream(prompt_manager, log_and_call_manager, output_manager, chain_id: s
         combined_completion_tokens_used = 0
         combined_total_tokens_used = 0
 
-        response = get_response(provider, model, messages, temperature, max_tokens, tools, response_format, reasoning_models, reasoning_effort)
+        response = get_response(model, provider, messages, temperature, max_tokens, tools, response_format, reasoning_models, reasoning_effort)
 
         start_time = time.time()
         # iterate through the stream of events
@@ -201,7 +201,7 @@ def llm_stream(prompt_manager, log_and_call_manager, output_manager, chain_id: s
 
             # Check if it's the last tool call in the list before calling 
             if index == len(tool_calls) - 1:
-                response = get_response(model, messages, temperature, max_tokens, tools, response_format, reasoning_models, reasoning_effort)
+                response = get_response(model, provider, messages, temperature, max_tokens, tools, response_format, reasoning_models, reasoning_effort)
 
         # iterate through the stream of events
         for chunk in response:
