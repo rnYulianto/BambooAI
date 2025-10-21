@@ -1,16 +1,23 @@
+import os
+import json
+import time
 import litellm
 from litellm import RateLimitError, completion
-import os
-
-import json
-import os
-import time
-import openai
 
 from bambooai import google_search, utils, context_retrieval
 
 google_search_function = google_search.SmartSearchOrchestrator()
 request_user_context = context_retrieval.request_user_context
+
+dev_stage = os.getenv('STAGE', 'dev')
+if dev_stage == 'dev':
+    # Set your Langfuse credentials
+    os.environ["LANGFUSE_PUBLIC_KEY"] = "pk-lf-483f68d8-20ae-4031-93e1-dfcbbd4660a8"
+    os.environ["LANGFUSE_SECRET_KEY"] = "sk-lf-cdca94a2-6cae-43af-bba9-2488baa42cf1"
+
+    # Use EU region
+    os.environ["LANGFUSE_OTEL_HOST"] = "http://langfuse-web:3000"
+    litellm.callbacks = ["langfuse_otel"]
 
 def init(provider='openai'):
     if provider != 'openai':
@@ -224,9 +231,10 @@ def llm_stream(prompt_manager, log_and_call_manager, output_manager, chain_id: s
         completion_tokens_used = combined_completion_tokens_used
         total_tokens_used = combined_total_tokens_used
 
-    except openai.APIError as e:
-        error_message = e.body.get('message')
-        output_manager.display_system_messages(f"Openai API Error: {error_message}")
+    except litellm.APIConnectionError as e:
+        # error_message = e.body.get('message')
+        # output_manager.display_system_messages(f"Openai API Error: {error_message}")
+        print(f"Openai API Error: {str(e)}")
         raise
     except Exception as e:
         output_manager.display_system_messages(f"Unexpected error: {str(e)}")

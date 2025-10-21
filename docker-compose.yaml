@@ -1,5 +1,7 @@
 services:
   bambooai-webapp:
+    environment:
+      - STAGE=prod
     build:
       context: .
       dockerfile: Dockerfile
@@ -7,26 +9,27 @@ services:
     ports:
       - "5001:5000"
     volumes:
-      # Mount local configuration files
-      - ./.env:/app/web_app/.env
-      - ./.env:/app/.env
-      - ./web_app/LLM_CONFIG.json:/app/web_app/LLM_CONFIG.json
-      
-      # Mount persistent storage directories
-      - ./web_app/storage:/app/web_app/storage
-      - ./web_app/temp:/app/web_app/temp
-      - ./web_app/logs:/app/web_app/logs
-
-      # Mount BambooAI
       - ./bambooai:/app/bambooai
-    
+      - ./web_app:/app/web_app
+      - ./.env:/app/web_app/.env
+      - ./LLM_CONFIG.json:/app/web_app/LLM_CONFIG.json
+
     # Restart policy
     restart: unless-stopped
-    command: gunicorn --bind 0.0.0.0:5000 app:app --reload
+    command: gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 4 app:app
     depends_on:
-      - bambooai-db
+      bambooai-db:
+        condition: service_healthy
   bambooai-db:
-    image: postgres:16-alpine
+    image: docker.io/postgres:${POSTGRES_VERSION:-latest}
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    ports:
+      - 127.0.0.1:5432:5432
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -36,3 +39,4 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
