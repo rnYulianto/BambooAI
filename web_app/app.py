@@ -8,6 +8,7 @@ import requests
 import threading
 import uuid
 import glob
+import urllib
 import pandas as pd
 from datetime import datetime, timedelta
 from queue import Queue, Empty
@@ -158,8 +159,20 @@ GLOBAL_EXECUTION_MODE = os.getenv('EXECUTION_MODE', 'local')  # Default to 'loca
 executor_client = executor_client.ExecutorAPIClient(base_url=EXECUTOR_API_BASE_URL)
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://user:password@bambooai-db:5432/dbname')
+
+params = urllib.parse.quote_plus(
+    f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+    f"SERVER=bambooai-db,1433;"
+    f"DATABASE=genaidb;"
+    f"UID=sa;"
+    f"PWD={os.getenv('SA_PASSWORD','')};"
+    f"Encrypt=no;"  # disable if not using SSL
+    f"TrustServerCertificate=yes;"
+)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mssql+pyodbc:///?odbc_connect={params}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db.init_app(app)
 with app.app_context():
     db.create_all()
