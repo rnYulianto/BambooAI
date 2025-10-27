@@ -4,12 +4,19 @@ FROM python:3.12.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies required for bambooai
-RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y curl gnupg apt-transport-https unixodbc-dev && \
+    mkdir -p /etc/apt/keyrings && \
+    curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/keyrings/microsoft.gpg && \
+    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && \
+    ACCEPT_EULA=Y apt-get install -y msodbcsql18 && \
+    apt-get install -y \
     build-essential \
     libffi-dev \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+    git && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy requirements.txt first to leverage Docker cache
 COPY requirements.txt .
