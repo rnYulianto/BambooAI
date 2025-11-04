@@ -17,23 +17,3 @@ services:
     # Restart policy
     restart: unless-stopped
     command: gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 4 --reload app:app
-    depends_on:
-      - bambooai-db
-  bambooai-db:
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    restart: always
-    ports:
-      - "1433:1433"
-    environment:
-      SA_PASSWORD: ${SA_PASSWORD}
-      ACCEPT_EULA: "Y"
-      MSSQL_PID: ${MSSQL_PID}
-    volumes:
-      - sqlserver_data:/var/opt/mssql
-      - ./init-db/init.sql:/init/init.sql
-      - ./init-db/entrypoint.sh:/init/entrypoint.sh
-    entrypoint: ["/bin/bash", "/init/entrypoint.sh"]
-
-volumes:
-  sqlserver_data:
-    driver: local

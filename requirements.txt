@@ -29,10 +29,3 @@ scipy
 scikit-learn
 geopandas
 yfinance
-flask_sqlalchemy
-flask_login
-psycopg2-binary
-pyodbc
-opentelemetry-api
-opentelemetry-sdk
-opentelemetry-exporter-otlp

@@ -1,4 +1,3 @@
-import argparse
 import re
 import os
 import sys
@@ -8,16 +7,11 @@ import requests
 import threading
 import uuid
 import glob
-import urllib
 import pandas as pd
-from datetime import datetime, timedelta
 from queue import Queue, Empty
-from flask import Flask, request, jsonify, Response, render_template, session, send_from_directory, redirect, url_for
+from flask import Flask, request, jsonify, Response, render_template, session, send_from_directory
 from dotenv import load_dotenv
 from werkzeug.datastructures import FileStorage
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User
 from functools import wraps
 
 # Temporary hardcoded user identifier
@@ -159,25 +153,7 @@ GLOBAL_EXECUTION_MODE = os.getenv('EXECUTION_MODE', 'local')  # Default to 'loca
 executor_client = executor_client.ExecutorAPIClient(base_url=EXECUTOR_API_BASE_URL)
 
 app = Flask(__name__)
-
-params = urllib.parse.quote_plus(
-    f"DRIVER={{ODBC Driver 18 for SQL Server}};"
-    f"SERVER=bambooai-db,1433;"
-    f"DATABASE=genaidb;"
-    f"UID=sa;"
-    f"PWD={os.getenv('SA_PASSWORD','')};"
-    f"Encrypt=no;"  # disable if not using SSL
-    f"TrustServerCertificate=yes;"
-)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mssql+pyodbc:///?odbc_connect={params}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db.init_app(app)
-with app.app_context():
-    db.create_all()
-login_manager = LoginManager(app)
-login_manager.login_view = 'login_page'
+app.secret_key = os.getenv('FLASK_SECRET')
 
 # Ensure directories exist
 for base in ['temp', 'iframe_figures', 'logs', 'datasets', 'storage']:
@@ -192,90 +168,6 @@ cleanup_threads(debug_mode=True)
 # Clear datasets folder
 clear_datasets_folder()
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-# Role-based authorization decorator
-def roles_required(*roles):
-    def decorator(f):
-        @wraps(f)
-        def wrapped(*args, **kwargs):
-            if current_user.role not in roles:
-                return jsonify({'error': 'Forbidden'}), 403
-            return f(*args, **kwargs)
-        return wrapped
-    return decorator
-
-# Authentication routes
-@app.route('/register', methods=['GET'])
-def register_page():
-    return render_template('register.html')
-
-@app.route('/register', methods=['POST'])
-def register():
-    email = request.form.get('email')
-    password = request.form.get('password')
-    nip = request.form.get('nip')
-    unit_kerja = request.form.get('unit_kerja')
-    jabatan = request.form.get('jabatan')
-    role = request.form.get('role', 'user')
-    if User.query.filter_by(email=email).first():
-        return jsonify({'error': 'Email already registered'}), 400
-    user = User(
-        email=email,
-        password_hash=generate_password_hash(password),
-        nip=nip,
-        unit_kerja=unit_kerja,
-        jabatan=jabatan,
-        role=role
-    )
-    db.session.add(user)
-    db.session.commit()
-    return redirect(url_for('login_page'))
-
-@app.route('/login', methods=['GET'])
-def login_page():
-    return render_template('login.html')
-
-@app.route('/login', methods=['POST'])
-def login():
-    try:
-        data = json.loads(request.data)
-    except Exception:
-        data = request.form
-    email = data.get('email')
-    password = data.get('password')
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
-    if not check_password_hash(user.password_hash, password):
-        return jsonify({'success': False, 'error': 'Incorrect password'}), 401
-    login_user(user)
-    return jsonify({'success': True, 'message': 'Logged in'}), 200
-
-@app.route('/logout', methods=['GET', 'POST'])
-@login_required
-def logout():
-    logout_user()
-    if request.method == 'POST':
-        return jsonify({'message': 'Logged out'}), 200
-    return redirect(url_for('login_page'))
-app.secret_key = os.getenv('FLASK_SECRET')
-
-# API endpoint to get current authenticated user details
-@app.route('/api/me', methods=['GET'])
-@login_required
-def get_current_user():
-    return jsonify({
-        'id': current_user.id,
-        'email': current_user.email,
-        'nip': getattr(current_user, 'nip', None),
-        'unit_kerja': getattr(current_user, 'unit_kerja', None),
-        'jabatan': getattr(current_user, 'jabatan', None),
-        'role': current_user.role
-    }), 200
-
 # Dictionary to store BambooAI instances for each session
 bamboo_ai_instances = {}
 
@@ -287,7 +179,6 @@ SEARCH_TOOL = True
 WEBUI = True
 VECTOR_DB = bool(os.getenv('PINECONE_API_KEY'))
 DF_ONTOLOGY = None
-
 
 # Function to generate a unique DataFrame ID
 def generate_dataframe_id() -> str:
@@ -470,13 +361,11 @@ def index():
     return render_template('homepage.html')
 
 @app.route('/app')
-@login_required
 def app_main():
     return render_template('index.html')
 
 # New endpoint to update planning preference
 @app.route('/update_planning', methods=['POST'])
-@login_required
 def update_planning():
     session_id = session.get('session_id')
     data = request.json
@@ -518,7 +407,6 @@ def update_planning():
     }), 200
 
 @app.route('/get_planning_state', methods=['GET'])
-@login_required
 def get_planning_state():
     session_id = session.get('session_id')
     
@@ -530,7 +418,6 @@ def get_planning_state():
     return jsonify({'planning_enabled': current_state})
 
 @app.route('/update_ontology', methods=['POST'])
-@login_required
 def update_ontology():
     session_id = session.get('session_id')
     if not session_id:
@@ -597,7 +484,6 @@ def update_ontology():
 
 # New endpoint to get ontology state
 @app.route('/get_ontology_state', methods=['GET'])
-@login_required
 def get_ontology_state():
     session_id = session.get('session_id')
 
@@ -614,7 +500,6 @@ def get_ontology_state():
 
 # Upload primary dataset endpoint
 @app.route('/upload', methods=['POST'])
-@login_required
 def upload_file():
     session_id = session['session_id']
     
@@ -668,7 +553,6 @@ def upload_file():
         return jsonify({'message': 'Invalid file type'}), 400
     
 # Remove primary dataset endpoint
-@login_required
 # @roles_required('admin')
 @app.route('/remove_primary_dataset', methods=['POST'])
 def remove_primary_dataset():
@@ -714,7 +598,6 @@ def remove_primary_dataset():
         return jsonify({'message': f'Error removing primary dataset: {str(e)}'}), 500
 
 @app.route('/upload_auxiliary_dataset', methods=['POST'])
-@login_required
 def upload_auxiliary_dataset():
     session_id = session['session_id']
     
@@ -800,7 +683,6 @@ def upload_auxiliary_dataset():
         return jsonify({'message': 'Invalid file type for auxiliary dataset. Must be .csv or .parquet.'}), 400
     
 # Remove auxiliary dataset endpoint
-@login_required
 # @roles_required('admin')
 @app.route('/remove_auxiliary_dataset', methods=['POST'])
 def remove_auxiliary_dataset():
@@ -874,7 +756,6 @@ def remove_auxiliary_dataset():
 
 # This endpoint is specifically for the primary dataset preview  
 @app.route('/get_primary_dataset_preview', methods=['POST'])
-@login_required
 def get_primary_dataset_preview():
     session_id = session.get('session_id')
     if not session_id:
@@ -916,7 +797,6 @@ def get_primary_dataset_preview():
 
 # This endpoint is specifically for auxiliary dataset previews
 @app.route('/get_dataset_preview', methods=['POST'])
-@login_required
 def get_dataset_preview():
     session_id = session.get('session_id')
     if not session_id:
@@ -980,7 +860,6 @@ def get_dataset_preview():
         return jsonify({'dataframe_html': df_json_str}), 200
 
 @app.route('/query', methods=['POST'])
-@login_required
 def query():
     session_id = session['session_id']
     bamboo_ai_instance = get_bamboo_ai(session_id)
@@ -1027,7 +906,6 @@ def query():
     return Response(generate(), mimetype='application/json')
 
 @app.route('/submit_rank', methods=['POST'])
-@login_required
 def submit_rank():
     session_id = session['session_id']
     bamboo_ai_instance = get_bamboo_ai(session_id)
@@ -1067,7 +945,6 @@ def submit_rank():
     return Response(generate(), mimetype='application/json')
 
 @app.route('/storage/favourites', methods=['POST'])
-@login_required
 def store_favourite():
     """ Store the favourite solution in the storage/favourites directory """
     
@@ -1118,7 +995,6 @@ def store_favourite():
         return jsonify({'error': f'Server error: {str(e)}'}), 500
     
 @app.route('/get_threads', methods=['GET'])
-@login_required
 def get_threads():
     """Get list of all saved threads with all their chains."""
     try:
@@ -1209,7 +1085,6 @@ def get_threads():
         return jsonify({'error': f"Server error: {str(e)}"}), 500
 
 @app.route('/load_thread/<thread_id>/<chain_id>', methods=['GET'])
-@login_required
 def load_thread(thread_id, chain_id):
     """Load all content for a specific thread and chain."""
     try:
@@ -1269,7 +1144,6 @@ def load_thread(thread_id, chain_id):
         }), 500
     
 @app.route('/get_chain_preview/<thread_id>/<chain_id>', methods=['GET'])
-@login_required
 def get_chain_preview(thread_id, chain_id):
     """Get a preview image or plotly data for a specific chain."""
     try:
@@ -1330,7 +1204,6 @@ def get_chain_preview(thread_id, chain_id):
         return jsonify({'error': f"Server error: {str(e)}"}), 500
     
 @app.route('/delete_chain/<thread_id>/<chain_id>', methods=['DELETE'])
-@login_required
 def delete_chain(thread_id, chain_id):
     """Delete a chain from the favorites directory and vector db if applicable."""
     try:
@@ -1373,13 +1246,11 @@ def delete_chain(thread_id, chain_id):
         return jsonify({'error': f"Server error: {str(e)}"}), 500
 
 @app.route('/new_conversation', methods=['POST'])
-@login_required
 def new_conversation():
     session_id = session['session_id']
     return start_new_conversation(session_id)
 
 @app.route('/submit_feedback', methods=['POST'])
-@login_required
 def submit_feedback():
     data = request.json
     feedback = data.get('feedback')
@@ -1423,7 +1294,6 @@ def submit_feedback():
         return jsonify({'error': f'Failed to store feedback: {str(e)}'}), 500
     
 @app.route('/download_generated_dataset', methods=['GET'])
-@login_required
 def download_generated_dataset():
     file_path_param = request.args.get('path')
 
@@ -1496,14 +1366,12 @@ def download_generated_dataset():
 
 # Endpoint to check if vector database is enabled      
 @app.route('/get_vector_db_status', methods=['GET'])
-@login_required
 def get_vector_db_status():
     """Endpoint to check if the vector database is enabled."""
     return jsonify({'vector_db_enabled': VECTOR_DB})
 
 # Endpoint to search threads in the vector database
 @app.route('/search_threads', methods=['POST'])
-@login_required
 def search_threads():
     """Receives a search query and returns matching results (ID and score) from Pinecone."""
     if not VECTOR_DB:
